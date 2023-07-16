@@ -40,3 +40,11 @@
 
 # output
 out/*
+
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+Testing
+CTestTestfile.cmake
+build/

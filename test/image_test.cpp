@@ -11,6 +11,6 @@ int main()
         }
     }
 
-    img.ppmOutput("out/image_test.ppm");
+    img.ppmOutput("../out/image_test.ppm");
     return 0;
 };

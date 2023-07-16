@@ -7,6 +7,7 @@
         "cmath": "cpp",
         "iostream": "cpp",
         "fstream": "cpp",
-        "ostream": "cpp"
+        "ostream": "cpp",
+        "cassert": "cpp"
     }
 }

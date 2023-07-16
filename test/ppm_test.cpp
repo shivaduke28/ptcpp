@@ -3,7 +3,7 @@
 
 int main()
 {
-    std::ofstream file("out/ppm_test.ppm");
+    std::ofstream file("../out/ppm_test.ppm");
 
     file << "P3" << std::endl;
     file << 512 << " " << 512 << std::endl;
@@ -20,4 +20,5 @@ int main()
     }
 
     file.close();
+    return 0;
 }
