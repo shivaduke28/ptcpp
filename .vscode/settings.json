@@ -2,11 +2,11 @@
     "cmake.configureOnOpen": false,
     "C_Cpp.default.compilerPath": "/usr/bin/cpp",
     "files.associations": {
-        "stdio.h": "c",
-        "vec3.h": "c",
         "cstdarg": "cpp",
         "cstdio": "cpp",
         "cmath": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "fstream": "cpp",
+        "ostream": "cpp"
     }
 }
