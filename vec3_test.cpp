@@ -1,4 +1,3 @@
-#include <iostream>
 #include "vec3.hpp"
 #include <cassert>
 
@@ -28,4 +27,5 @@ int main()
     assert(v4.z == 5);
 
     assert(dot(v3, v3) == 1 + 4 + 9);
+    return 0;
 }

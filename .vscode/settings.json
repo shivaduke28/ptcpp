@@ -6,6 +6,7 @@
         "vec3.h": "c",
         "cstdarg": "cpp",
         "cstdio": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "iostream": "cpp"
     }
 }
