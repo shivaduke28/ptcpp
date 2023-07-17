@@ -1,7 +1,8 @@
 #include <iostream>
 #include <fstream>
+#include "gtest/gtest.h"
 
-int main()
+TEST(ppm, CreatePPM)
 {
     std::ofstream file("../out/ppm_test.ppm");
 
@@ -20,5 +21,4 @@ int main()
     }
 
     file.close();
-    return 0;
 }
