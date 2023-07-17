@@ -1,2 +1,2 @@
-set(EXECUTABLE_OUTPUT_PATH "${PROJECT_SOURCE_DIR}/build")
-add_executable(main.exe main.cpp)
+file(GLOB SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp")
+add_executable(ptcpp ${SOURCES})

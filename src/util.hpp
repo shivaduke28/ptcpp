@@ -1,3 +1,5 @@
+#ifndef UTIL_H
+#define UTIL_H
 template <typename T>
 
 T clamp(T x, T xmin, T xmax)
@@ -9,3 +11,4 @@ T clamp(T x, T xmin, T xmax)
     else
         return x;
 }
+#endif

@@ -1,7 +1,8 @@
-project(ptcpp)
 cmake_minimum_required(VERSION 3.16)
 
-enable_testing()
+project(ptcpp)
 
-add_subdirectory(src)
-add_subdirectory(test)
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/src")
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/test")
+
+enable_testing()

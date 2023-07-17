@@ -1,6 +1,7 @@
 #include "image.hpp"
+#include "gtest/gtest.h"
 
-int main()
+TEST(Image, CreateImage)
 {
     Image img(512, 512);
     for (int i = 0; i < img.width; i++)
@@ -12,5 +13,4 @@ int main()
     }
 
     img.ppmOutput("../out/image_test.ppm");
-    return 0;
 };
