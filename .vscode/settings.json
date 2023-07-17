@@ -8,6 +8,6 @@
         "iostream": "cpp",
         "fstream": "cpp",
         "ostream": "cpp",
-        "cassert": "cpp"
+        "iosfwd": "cpp"
     }
 }

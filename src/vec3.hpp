@@ -95,13 +95,24 @@ inline Vec3 cross(const Vec3 &v1, const Vec3 &v2)
 {
     return Vec3(
         v1.y * v2.z - v1.z * v2.y,
-        v1.z * v2.x - v1.z * v2.x,
+        v1.z * v2.x - v1.x * v2.z,
         v1.x * v2.y - v1.y * v2.x);
 }
 
 inline Vec3 normalize(const Vec3 &v)
 {
     return v / v.length();
+}
+
+inline void orthonormalBasis(const Vec3 &v1, Vec3 &v2, Vec3 &v3)
+{
+    if (std::abs(v1.x) > 0.9)
+        v2 = Vec3(0, 1, 0);
+    else
+        v2 = Vec3(1, 0, 0);
+
+    v2 = normalize(v2 - dot(v1, v2) * v1);
+    v3 = cross(v1, v2);
 }
 
 inline std::ostream &operator<<(std::ostream &stream, const Vec3 &v)

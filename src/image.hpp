@@ -62,9 +62,9 @@ public:
         file << "P3" << std::endl;
         file << width << " " << height << std::endl;
         file << 255 << std::endl;
-        for (int i = 0; i < width; i++)
+        for (int j = 0; j < height; j++)
         {
-            for (int j = 0; j < height; j++)
+            for (int i = 0; i < width; i++)
             {
                 Vec3 c = this->getPixel(i, j);
                 int r = clamp(int(255 * c.x), 0, 255);
