@@ -4,7 +4,7 @@
 
 TEST(ppm, CreatePPM)
 {
-    std::ofstream file("../out/ppm_test.ppm");
+    std::ofstream file("ppm_test.ppm");
 
     file << "P3" << std::endl;
     file << 512 << " " << 512 << std::endl;

@@ -12,5 +12,5 @@ TEST(Image, CreateImage)
         }
     }
 
-    img.ppmOutput("../out/image_test.ppm");
+    img.ppmOutput("image_test.ppm");
 };
