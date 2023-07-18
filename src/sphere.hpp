@@ -20,7 +20,7 @@ public:
         double c = (ray.origin - center).length2() - radius * radius;
         double D = b * b - c;
 
-        if (D < 0)
+        if (D <= 0)
             return false;
 
         double d = std::sqrt(D);
@@ -28,8 +28,11 @@ public:
         double t1 = -b - d;
         double t2 = -b + d;
 
+        if (t1 > 10000 | t2 < 0)
+            return false;
+
         double t = t1;
-        if (d < 0)
+        if (t < 0)
         {
             t = t2;
             if (t2 > 10000)
