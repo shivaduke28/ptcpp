@@ -1,9 +1,9 @@
-#include "aggregate.hpp"
-#include "sphere.hpp"
-#include "vec3.hpp"
-#include "hit.hpp"
-#include "image.hpp"
-#include "camera.hpp"
+#include "aggregate.h"
+#include "sphere.h"
+#include "vec3.h"
+#include "hit.h"
+#include "image.h"
+#include "camera.h"
 #include "gtest/gtest.h"
 
 TEST(Aggregate, intersect)

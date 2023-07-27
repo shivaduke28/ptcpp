@@ -1,6 +1,6 @@
-#include "vec3.hpp"
-#include "ray.hpp"
-#include "sphere.hpp"
+#include "vec3.h"
+#include "ray.h"
+#include "sphere.h"
 #include "gtest/gtest.h"
 
 TEST(Sphere, SphereTest)

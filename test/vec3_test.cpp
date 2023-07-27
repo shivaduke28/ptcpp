@@ -1,4 +1,4 @@
-#include "vec3.hpp"
+#include "vec3.h"
 #include "gtest/gtest.h"
 
 TEST(Vec3, ctor)

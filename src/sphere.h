@@ -2,9 +2,9 @@
 #define SPHERE_H
 
 #include <cmath>
-#include "vec3.hpp"
-#include "ray.hpp"
-#include "hit.hpp"
+#include "vec3.h"
+#include "ray.h"
+#include "hit.h"
 
 class Sphere
 {

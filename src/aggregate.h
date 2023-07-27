@@ -2,7 +2,7 @@
 #define AGGREGATE_H
 #include <memory>
 #include <vector>
-#include "sphere.hpp"
+#include "sphere.h"
 
 class Aggregate
 {

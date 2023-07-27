@@ -1,10 +1,10 @@
 
-#include "ray.hpp"
-#include "image.hpp"
+#include "ray.h"
+#include "image.h"
 #include "gtest/gtest.h"
-#include "camera.hpp"
-#include "vec3.hpp"
-#include "sphere.hpp"
+#include "camera.h"
+#include "vec3.h"
+#include "sphere.h"
 
 TEST(SingleSphereTracing, Image)
 {

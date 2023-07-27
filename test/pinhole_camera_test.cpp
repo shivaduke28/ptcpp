@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
-#include "image.hpp"
-#include "camera.hpp"
+#include "image.h"
+#include "camera.h"
 
 TEST(PinholeCamera, CreateImage)
 {

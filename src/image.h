@@ -3,8 +3,8 @@
 
 #include <iostream>
 #include <fstream>
-#include "vec3.hpp"
-#include "util.hpp"
+#include "vec3.h"
+#include "util.h"
 
 class Image
 {

@@ -1,12 +1,12 @@
 #include <memory>
-#include "vec3.hpp"
-#include "ray.hpp"
-#include "hit.hpp"
-#include "sphere.hpp"
-#include "image.hpp"
-#include "aggregate.hpp"
+#include "vec3.h"
+#include "ray.h"
+#include "hit.h"
+#include "sphere.h"
+#include "image.h"
+#include "aggregate.h"
 #include "gtest/gtest.h"
-#include "camera.hpp"
+#include "camera.h"
 
 TEST(Shadow, Draw)
 {

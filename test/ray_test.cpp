@@ -1,4 +1,4 @@
-#include "ray.hpp"
+#include "ray.h"
 #include "gtest/gtest.h"
 
 TEST(Ray, RayTest)

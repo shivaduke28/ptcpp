@@ -1,4 +1,4 @@
-#include "image.hpp"
+#include "image.h"
 #include "gtest/gtest.h"
 
 TEST(Image, CreateImage)
