@@ -33,6 +33,12 @@ public:
         data[i + width * j] = c;
     };
 
+    void addtPixel(int i, int j, const Vec3 &c)
+    {
+        Vec3 c2 = data[i + width * j];
+        data[i + width * j] = c + c2;
+    };
+
     void divide(double k)
     {
         for (int i = 0; i < width; i++)
