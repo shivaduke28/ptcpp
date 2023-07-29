@@ -5,10 +5,9 @@
 #include "sphere.h"
 #include "image.h"
 #include "aggregate.h"
-#include "gtest/gtest.h"
 #include "camera.h"
 
-TEST(Shadow, Draw)
+int main()
 {
     Image img(512, 512);
     PinholeCamera cam(Vec3(0, 2, 3), Vec3(0, 0, -1), 1);
@@ -53,4 +52,5 @@ TEST(Shadow, Draw)
         }
     }
     img.ppmOutput("draw_shadow.ppm");
+    return 0;
 }
