@@ -33,7 +33,7 @@ public:
         data[i + width * j] = c;
     };
 
-    void addtPixel(int i, int j, const Vec3 &c)
+    void addPixel(int i, int j, const Vec3 &c)
     {
         Vec3 c2 = data[i + width * j];
         data[i + width * j] = c + c2;
@@ -57,7 +57,7 @@ public:
             for (int j = 0; j < height; j++)
             {
                 Vec3 c = this->getPixel(i, j);
-                this->setPixel(i, j, Vec3(std::pow(c.x, 0.45454545454), std::pow(c.x, 0.45454545454), std::pow(c.x, 0.45454545454)));
+                this->setPixel(i, j, Vec3(std::pow(c.x, 0.45454545454), std::pow(c.y, 0.45454545454), std::pow(c.z, 0.45454545454)));
             }
         }
     };

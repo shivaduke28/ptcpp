@@ -1,7 +1,8 @@
 add_executable(ptcpp "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
 add_executable(draw_shadow "${CMAKE_CURRENT_SOURCE_DIR}/draw_shadow.cpp")
-add_executable(super_sampling "${CMAKE_CURRENT_SOURCE_DIR}/super_sampling.cpp")
+# add_executable(super_sampling "${CMAKE_CURRENT_SOURCE_DIR}/super_sampling.cpp")
 add_executable(montecarlo "${CMAKE_CURRENT_SOURCE_DIR}/montecarlo.cpp")
+add_executable(path_tracing "${CMAKE_CURRENT_SOURCE_DIR}/path_tracing.cpp")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/..")
 
