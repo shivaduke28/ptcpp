@@ -8,13 +8,13 @@
 #include <omp.h>
 #include <algorithm>
 
-const int SUPER_SAMPLING = 100;
+const int SUPER_SAMPLING = 1000;
 const int MAX_DEPTH = 500;
 const double ROULETTE = 0.9;
-const double SCATTERING = 0.32;
+const double SCATTERING = 0.15;
 const double ABSORPTION = 0.0;
 const double EXTINCTION = SCATTERING + ABSORPTION;
-const double HG_G = 0.5;
+const double HG_G = 0.8;
 
 double sample_distance()
 {
@@ -31,8 +31,8 @@ double transmittance(double distance)
 Vec3 sample_Henyey_Greenstein(Vec3 wi, double g, double &pdf)
 {
     double phi = 2 * M_PI * rnd();
-    double sqrTerm = (1 - g * g) / (1 - g + 2 * g * rnd());
-    double cos_theta = (1 + g * g - sqrTerm * sqrTerm) / (2 * g);
+    double sqrTerm = (1 - g * g) / (1 + g - 2 * g * rnd());
+    double cos_theta = -(1 + g * g - sqrTerm * sqrTerm) / (2 * g);
     double sin_theta = std::sqrt(1 - cos_theta * cos_theta);
 
     double x = cos(phi) * sin_theta;

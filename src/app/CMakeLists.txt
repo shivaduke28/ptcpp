@@ -4,6 +4,7 @@ add_executable(draw_shadow "${CMAKE_CURRENT_SOURCE_DIR}/draw_shadow.cpp")
 add_executable(montecarlo "${CMAKE_CURRENT_SOURCE_DIR}/montecarlo.cpp")
 add_executable(path_tracing "${CMAKE_CURRENT_SOURCE_DIR}/path_tracing.cpp")
 add_executable(volume "${CMAKE_CURRENT_SOURCE_DIR}/volume.cpp")
+add_executable(phase_function "${CMAKE_CURRENT_SOURCE_DIR}/phase_function.cpp")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/..")
 
