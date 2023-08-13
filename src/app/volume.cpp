@@ -8,11 +8,13 @@
 #include <omp.h>
 #include <algorithm>
 
+const int SUPER_SAMPLING = 100;
 const int MAX_DEPTH = 500;
 const double ROULETTE = 0.9;
-const double SCATTERING = 0.3;
-const double ABSORPTION = 0.1;
+const double SCATTERING = 0.32;
+const double ABSORPTION = 0.0;
 const double EXTINCTION = SCATTERING + ABSORPTION;
+const double HG_G = 0.5;
 
 double sample_distance()
 {
@@ -26,13 +28,33 @@ double transmittance(double distance)
     return std::exp(-EXTINCTION * distance);
 }
 
-Vec3 sample_in_scattering()
+Vec3 sample_Henyey_Greenstein(Vec3 wi, double g, double &pdf)
 {
-    double theta = 2 * M_PI * rnd();
-    double phi = acos(1 - 2 * rnd());
-    double x = sin(phi) * cos(theta);
-    double z = sin(phi) * sin(theta);
-    double y = cos(phi);
+    double phi = 2 * M_PI * rnd();
+    double sqrTerm = (1 - g * g) / (1 - g + 2 * g * rnd());
+    double cos_theta = (1 + g * g - sqrTerm * sqrTerm) / (2 * g);
+    double sin_theta = std::sqrt(1 - cos_theta * cos_theta);
+
+    double x = cos(phi) * sin_theta;
+    double y = cos_theta;
+    double z = sin_theta * sin(phi);
+
+    Vec3 local(x, y, z);
+    Vec3 s, t;
+    orthonormalBasis(wi, s, t);
+
+    // pdf = (1.0 - g * g) / (4.0 * M_PI * std::pow(1.0 + g * g + 2 * g * cos_theta, 1.5));
+    return local_to_world(local, s, wi, t);
+}
+
+Vec3 sample_in_scattering(double &pdf)
+{
+    double phi = 2 * M_PI * rnd();
+    double theta = acos(1 - 2 * rnd());
+    double x = sin(theta) * cos(phi);
+    double z = sin(theta) * sin(phi);
+    double y = cos(theta);
+    pdf = 1 / (4.0 * M_PI);
     return Vec3(x, y, z);
 }
 
@@ -49,10 +71,12 @@ Vec3 trace(const Ray &init_ray, const Aggregate &aggregate)
         {
             double s = sample_distance();
 
-            // ボリューム
             if (s < hit.t)
             {
-                ray = Ray(ray(s), sample_in_scattering());
+                double pdf = 1;
+                ray = Ray(ray(s), sample_Henyey_Greenstein(ray.direction, HG_G, pdf));
+                // ray = Ray(ray(s), sample_in_scattering(pdf));
+                throughput *= SCATTERING / (EXTINCTION);
             }
             else
             {
@@ -99,22 +123,28 @@ Vec3 trace(const Ray &init_ray, const Aggregate &aggregate)
 int main()
 {
     // サンプリング数
-    const int N = 100;
+    const int N = SUPER_SAMPLING;
 
     Image img(512, 512);
-    PinholeCamera cam(Vec3(0, 0, 2), Vec3(0, 0, -1), 1);
+    PinholeCamera cam(Vec3(0, 1, 2), Vec3(0, 0, -1), 1);
 
-    auto mat1 = std::make_shared<Diffuse>(Vec3(0.9, 0.9, 0.9));
-    auto mat2 = std::make_shared<Diffuse>(Vec3(0.2, 0.2, 0.8));
+    auto mat_white = std::make_shared<Diffuse>(Vec3(0.9, 0.9, 0.9));
+    auto mat_green = std::make_shared<Diffuse>(Vec3(0.4, 0.9, 0.4));
+    auto mat_red = std::make_shared<Diffuse>(Vec3(0.9, 0.4, 0.4));
 
-    auto light1 = std::make_shared<Light>(Vec3(0));
-    auto light2 = std::make_shared<Light>(Vec3(1.5, 0.6, 0.8));
+    auto light_black = std::make_shared<Light>(Vec3(0));
+    auto light_white = std::make_shared<Light>(Vec3(1, 1, 1) * 2);
+    auto light_blue = std::make_shared<Light>(Vec3(0.1, 0.1, 0.9) * 2);
 
     Aggregate aggregate;
-    aggregate.add(std::make_shared<Sphere>(Vec3(0, -10001, 0), 10000, mat1, light1));
-    aggregate.add(std::make_shared<Sphere>(Vec3(0, 10003, 0), 10000, mat1, light1));
-    aggregate.add(std::make_shared<Sphere>(Vec3(-1, 0, -3), 1, mat2, light1));
-    aggregate.add(std::make_shared<Sphere>(Vec3(1, 0, -3), 1, mat2, light2));
+    aggregate.add(std::make_shared<Sphere>(Vec3(0, 0, 10004), 10000, mat_white, light_black));
+    aggregate.add(std::make_shared<Sphere>(Vec3(0, 0, -10004), 10000, mat_white, light_black));
+    aggregate.add(std::make_shared<Sphere>(Vec3(0, -10001, 0), 10000, mat_white, light_black));
+    aggregate.add(std::make_shared<Sphere>(Vec3(0, 10004, 0), 10000, mat_white, light_black));
+    aggregate.add(std::make_shared<Sphere>(Vec3(10003, 0, 0), 10000, mat_green, light_black));
+    aggregate.add(std::make_shared<Sphere>(Vec3(-10003, 0, 0), 10000, mat_red, light_black));
+    aggregate.add(std::make_shared<Sphere>(Vec3(0, 0.5, -1), 0.5, mat_white, light_black));
+    aggregate.add(std::make_shared<Sphere>(Vec3(0, 6.5, -3), 3, mat_white, light_white));
 
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < img.width; i++)
