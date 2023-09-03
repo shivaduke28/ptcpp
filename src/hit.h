@@ -2,22 +2,23 @@
 #define HIT_H
 
 #include "vec3.h"
-
-// prototype
-class Sphere;
-
-class Hit
+namespace ptcpp
 {
-public:
-    double t;
-    Vec3 hitPos;
-    Vec3 hitNormal;
-    const Sphere *hitSphere;
+    // prototype
+    class sphere;
 
-    Hit()
+    class hit
     {
-        t = 100000;
-    };
-};
+    public:
+        double t;
+        vec3 hitPos;
+        vec3 hitNormal;
+        const sphere *hitSphere;
 
+        hit()
+        {
+            t = 100000;
+        };
+    };
+}
 #endif

@@ -3,40 +3,41 @@
 #include <memory>
 #include <vector>
 #include "sphere.h"
-
-class Aggregate
+namespace ptcpp
 {
-public:
-    std::vector<std::shared_ptr<Sphere>> spheres;
-
-    Aggregate(){};
-
-    Aggregate(const std::vector<std::shared_ptr<Sphere>> &_spheres) : spheres(_spheres)
+    class aggregate
     {
-    }
+    public:
+        std::vector<std::shared_ptr<sphere>> spheres;
 
-    void add(const std::shared_ptr<Sphere> &s)
-    {
-        spheres.push_back(s);
-    };
+        aggregate(){};
 
-    bool intersect(const Ray &ray, Hit &res) const
-    {
-        bool hit = false;
-        for (auto s : spheres)
+        aggregate(const std::vector<std::shared_ptr<sphere>> &_spheres) : spheres(_spheres)
         {
-            Hit res_temp;
-            if ((*s).intersect(ray, res_temp))
+        }
+
+        void add(const std::shared_ptr<sphere> &s)
+        {
+            spheres.push_back(s);
+        };
+
+        bool intersect(const ray &ray, hit &res) const
+        {
+            bool hit = false;
+            for (auto s : spheres)
             {
-                hit = true;
-                if (res_temp.t < res.t)
+                ptcpp::hit res_temp;
+                if ((*s).intersect(ray, res_temp))
                 {
-                    res = res_temp;
+                    hit = true;
+                    if (res_temp.t < res.t)
+                    {
+                        res = res_temp;
+                    }
                 }
             }
+            return hit;
         }
-        return hit;
-    }
-};
-
+    };
+}
 #endif

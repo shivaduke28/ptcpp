@@ -1,16 +1,18 @@
 #include "image.h"
 #include "gtest/gtest.h"
-
-TEST(Image, CreateImage)
+namespace ptcpp::test
 {
-    Image img(512, 512);
-    for (int i = 0; i < img.width; i++)
+    TEST(image, CreateImage)
     {
-        for (int j = 0; j < img.height; j++)
+        image img(512, 512);
+        for (int i = 0; i < img.width; i++)
         {
-            img.setPixel(i, j, Vec3(i / double(img.width), j / double(img.height), 1.0));
+            for (int j = 0; j < img.height; j++)
+            {
+                img.set_pixel(i, j, vec3(i / double(img.width), j / double(img.height), 1.0));
+            }
         }
-    }
 
-    img.ppmOutput("image_test.ppm");
-};
+        img.ppm_output("image_test.ppm");
+    };
+}

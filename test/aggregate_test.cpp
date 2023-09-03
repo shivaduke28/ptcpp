@@ -6,22 +6,25 @@
 #include "camera.h"
 #include "gtest/gtest.h"
 
-TEST(Aggregate, intersect)
+namespace ptcpp::test
 {
-    Aggregate aggregate;
-    aggregate.add(std::make_shared<Sphere>(Vec3(0, 0, -1), 1));
-    aggregate.add(std::make_shared<Sphere>(Vec3(0, 0, 4), 1));
+    TEST(aggregate, intersect)
+    {
+        aggregate aggregate;
+        aggregate.add(std::make_shared<sphere>(vec3(0, 0, -1), 1));
+        aggregate.add(std::make_shared<sphere>(vec3(0, 0, 4), 1));
 
-    Ray ray1(Vec3(0, 0, -10), Vec3(0, 0, 1));
-    Hit hit;
-    ASSERT_TRUE(aggregate.intersect(ray1, hit));
-    ASSERT_EQ(hit.hitSphere->center.x, 0);
-    ASSERT_EQ(hit.hitSphere->center.y, 0);
-    ASSERT_EQ(hit.hitSphere->center.z, -1);
+        ray ray1(vec3(0, 0, -10), vec3(0, 0, 1));
+        hit hit;
+        ASSERT_TRUE(aggregate.intersect(ray1, hit));
+        ASSERT_EQ(hit.hitSphere->center.x, 0);
+        ASSERT_EQ(hit.hitSphere->center.y, 0);
+        ASSERT_EQ(hit.hitSphere->center.z, -1);
 
-    Ray ray2(Vec3(0, 0, 10), Vec3(0, 0, -1));
-    ASSERT_TRUE(aggregate.intersect(ray2, hit));
-    ASSERT_EQ(hit.hitSphere->center.x, 0);
-    ASSERT_EQ(hit.hitSphere->center.y, 0);
-    ASSERT_EQ(hit.hitSphere->center.z, 4);
-};
+        ray ray2(vec3(0, 0, 10), vec3(0, 0, -1));
+        ASSERT_TRUE(aggregate.intersect(ray2, hit));
+        ASSERT_EQ(hit.hitSphere->center.x, 0);
+        ASSERT_EQ(hit.hitSphere->center.y, 0);
+        ASSERT_EQ(hit.hitSphere->center.z, 4);
+    };
+}
