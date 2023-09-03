@@ -1,11 +1,13 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 #include "vec3.h"
-
-class Material
+namespace ptcpp
 {
-public:
-    virtual Vec3 sample(const Vec3 &wo, Vec3 &wi, double &pdf) const = 0;
-};
-
+    class material
+    {
+    public:
+        virtual vec3 sample(const vec3 &wo, vec3 &wi, double &pdf) const = 0;
+        virtual vec3 sample(const vec3 &wi, double &pdf) const = 0;
+    };
+}
 #endif

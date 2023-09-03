@@ -3,36 +3,37 @@
 
 #include "vec3.h"
 #include "ray.h"
-
-class Camera
+namespace ptcpp
 {
-public:
-    Vec3 camPos;
-    Vec3 camForward;
-    Vec3 camRight;
-    Vec3 camUp;
-    Camera(const Vec3 &_camPos, const Vec3 &_camForward) : camPos(_camPos), camForward(_camForward)
+    class camera
     {
-        orthonormalBasis(camForward, camRight, camUp);
+    public:
+        vec3 cam_pos;
+        vec3 cam_forward;
+        vec3 cam_right;
+        vec3 cam_up;
+        camera(const vec3 &_camPos, const vec3 &_camForward) : cam_pos(_camPos), cam_forward(_camForward)
+        {
+            orthonormal_basis(cam_forward, cam_right, cam_up);
+        };
+
+        virtual ray getRay(double u, double v) const = 0;
     };
 
-    virtual Ray getRay(double u, double v) const = 0;
-};
-
-class PinholeCamera : public Camera
-{
-public:
-    double pinholeDist;
-    PinholeCamera(const Vec3 &_camPos, const Vec3 &_camForward, double _pinholeDist)
-        : Camera(_camPos, _camForward), pinholeDist(_pinholeDist){};
-
-    Ray getRay(double u, double v) const
+    class pinhole_camera : public camera
     {
-        Vec3 pinholePos = camPos + pinholeDist * camForward;
-        Vec3 sensorPos = camPos + u * camRight + v * camUp;
+    public:
+        double pinhole_dist;
+        pinhole_camera(const vec3 &_camPos, const vec3 &_camForward, double _pinholeDist)
+            : camera(_camPos, _camForward), pinhole_dist(_pinholeDist){};
 
-        return Ray(sensorPos, normalize(pinholePos - sensorPos));
-    }
-};
+        ray getRay(double u, double v) const
+        {
+            vec3 pinholePos = cam_pos + pinhole_dist * cam_forward;
+            vec3 sensorPos = cam_pos + u * cam_right + v * cam_up;
 
+            return ray(sensorPos, normalize(pinholePos - sensorPos));
+        }
+    };
+}
 #endif

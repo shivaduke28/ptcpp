@@ -2,22 +2,24 @@
 #define HIT_H
 
 #include "vec3.h"
+#include "material.h"
+#include "light.h"
 
-// prototype
-class Sphere;
-
-class Hit
+namespace ptcpp
 {
-public:
-    double t;
-    Vec3 hitPos;
-    Vec3 hitNormal;
-    const Sphere *hitSphere;
-
-    Hit()
+    class hit
     {
-        t = 100000;
-    };
-};
+    public:
+        double t;
+        vec3 position;
+        vec3 normal;
+        const ptcpp::material *material;
+        const ptcpp::light *light;
 
+        hit()
+        {
+            t = 100000;
+        };
+    };
+}
 #endif

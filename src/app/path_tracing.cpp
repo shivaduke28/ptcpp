@@ -7,44 +7,48 @@
 #include "aggregate.h"
 #include <omp.h>
 #include <algorithm>
+#include "cube.h"
+#include "sphere.h"
+
+using namespace ptcpp;
 
 const int MAX_DEPTH = 500;
 const double ROULETTE = 0.9;
 
-Vec3 radiance(const Ray &init_ray, const Aggregate &aggregate)
+vec3 radiance(const ray &init_ray, const aggregate &aggregate)
 {
-    Vec3 col;
-    Vec3 throughput(1);
-    Ray ray = init_ray;
+    vec3 col;
+    vec3 throughput(1);
+    ray ra = init_ray;
 
     for (int depth = 0; depth < MAX_DEPTH; depth++)
     {
-        Hit res;
-        if (aggregate.intersect(ray, res))
+        hit res;
+        if (aggregate.intersect(ra, res))
         {
-            Vec3 n = res.hitNormal;
-            Vec3 s, t;
-            orthonormalBasis(n, s, t);
-            Vec3 wo_local = world_to_local(-ray.direction, s, n, t);
+            vec3 n = res.normal;
+            vec3 s, t;
+            orthonormal_basis(n, s, t);
+            vec3 wo_local = world_to_local(-ra.direction, s, n, t);
 
-            auto hitMaterial = res.hitSphere->material;
-            auto hitLight = res.hitSphere->light;
+            auto hitMaterial = res.material;
+            auto hitLight = res.light;
             col += throughput * hitLight->Le();
 
-            Vec3 brdf;
+            vec3 brdf;
             double pdf;
-            Vec3 wi_local;
+            vec3 wi_local;
             brdf = hitMaterial->sample(wo_local, wi_local, pdf);
             double cos = wi_local.y;
-            Vec3 wi = local_to_world(wi_local, s, n, t);
+            vec3 wi = local_to_world(wi_local, s, n, t);
 
             throughput *= brdf * cos / pdf;
 
-            ray = Ray(res.hitPos + 0.001 * res.hitNormal, wi);
+            ra = ray(res.position + 0.001 * res.normal, wi);
         }
         else
         {
-            col += throughput * Vec3(0.001);
+            col += throughput * vec3(0.001);
             break;
         }
 
@@ -66,18 +70,32 @@ int main()
     // サンプリング数
     const int N = 100;
 
-    Image img(512, 512);
-    PinholeCamera cam(Vec3(0, 0, 1), Vec3(0, 0, -1), 1);
+    image img(512, 512);
+    ptcpp::pinhole_camera cam(vec3(0, 2, 4), vec3(0, 0, -1), 1);
 
-    auto mat1 = std::make_shared<Diffuse>(Vec3(0.9, 0.9, 0.9));
-    auto mat2 = std::make_shared<Diffuse>(Vec3(0.2, 0.2, 0.8));
+    auto white = std::make_shared<ptcpp::diffuse>(vec3(0.9, 0.9, 0.9));
+    auto red = std::make_shared<ptcpp::diffuse>(vec3(0.9, 0.1, 0.1));
+    auto green = std::make_shared<ptcpp::diffuse>(vec3(0.1, 0.9, 0.1));
 
-    auto light1 = std::make_shared<Light>(Vec3(0));
-    auto light2 = std::make_shared<Light>(Vec3(0.2, 0.2, 0.8));
+    auto light_off = std::make_shared<ptcpp::light>(vec3(0));
+    auto light = std::make_shared<ptcpp::light>(vec3(5));
 
-    Aggregate aggregate;
-    aggregate.add(std::make_shared<Sphere>(Vec3(0, -10001, 0), 10000, mat1, light1));
-    aggregate.add(std::make_shared<Sphere>(Vec3(0, 0, -3), 1, mat2, light2));
+    aggregate aggregate;
+    // floor
+    aggregate.add(std::make_shared<cube>(vec3(0, -0.5, 0), vec3(5, 1, 5), white, light_off));
+    // ceil
+    aggregate.add(std::make_shared<cube>(vec3(0, 4.5, 0), vec3(5, 1, 5), white, light_off));
+    // wall
+    aggregate.add(std::make_shared<cube>(vec3(0, 2, -2.5), vec3(5, 5, 1), white, light_off));
+    // right green
+    aggregate.add(std::make_shared<cube>(vec3(2.5, 2.5, 0), vec3(1, 5, 5), green, light_off));
+    // left red
+    aggregate.add(std::make_shared<cube>(vec3(-2.5, 2.5, 0), vec3(1, 5, 5), red, light_off));
+    // light
+    aggregate.add(std::make_shared<cube>(vec3(0, 4, 0), vec3(1, 0.2, 1), white, light));
+
+    aggregate.add(std::make_shared<cube>(vec3(0.5, 1, -1), vec3(0.8, 2, 0.8), white, light_off));
+    aggregate.add(std::make_shared<sphere>(vec3(-0.5, 0.5, 0), 0.5, white, light_off));
 
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < img.width; i++)
@@ -89,10 +107,10 @@ int main()
                 double u = (2.0 * (i + rnd()) - img.width) / img.width;
                 double v = (2.0 * (j + rnd()) - img.height) / img.height;
 
-                Ray ray = cam.getRay(-u, -v);
+                ray ray = cam.getRay(-u, -v);
 
-                Vec3 col = radiance(ray, aggregate);
-                img.addPixel(i, j, col);
+                vec3 col = radiance(ray, aggregate);
+                img.add_pixel(i, j, col);
             }
 
             if (omp_get_thread_num() == 0)
@@ -103,7 +121,7 @@ int main()
     }
 
     img.divide(N);
-    img.gammaCorrection();
-    img.ppmOutput("path_tracing.ppm");
+    img.gamma_correction();
+    img.ppm_output("path_tracing.ppm");
     return 0;
 }

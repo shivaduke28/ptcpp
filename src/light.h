@@ -2,18 +2,24 @@
 #define LIGHT_H
 
 #include "vec3.h"
-
-class Light
+namespace ptcpp
 {
-public:
-    Vec3 color;
-
-    Light(const Vec3 &_color) : color(_color){};
-
-    Vec3 Le() const
+    class light
     {
-        return color;
-    };
-};
+        vec3 color;
 
+    public:
+        bool enable;
+
+        light(const vec3 &_color) : color(_color)
+        {
+            enable = color.length2() > 0.0;
+        };
+
+        vec3 Le() const
+        {
+            return color;
+        };
+    };
+}
 #endif
