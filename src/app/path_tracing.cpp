@@ -7,6 +7,8 @@
 #include "aggregate.h"
 #include <omp.h>
 #include <algorithm>
+#include "cube.h"
+#include "sphere.h"
 
 using namespace ptcpp;
 
@@ -24,7 +26,7 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate)
         hit res;
         if (aggregate.intersect(ra, res))
         {
-            vec3 n = res.hit_normal;
+            vec3 n = res.normal;
             vec3 s, t;
             orthonormal_basis(n, s, t);
             vec3 wo_local = world_to_local(-ra.direction, s, n, t);
@@ -42,7 +44,7 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate)
 
             throughput *= brdf * cos / pdf;
 
-            ra = ray(res.hit_pos + 0.001 * res.hit_normal, wi);
+            ra = ray(res.position + 0.001 * res.normal, wi);
         }
         else
         {
@@ -69,17 +71,31 @@ int main()
     const int N = 100;
 
     image img(512, 512);
-    ptcpp::pinhole_camera cam(vec3(0, 0, 1), vec3(0, 0, -1), 1);
+    ptcpp::pinhole_camera cam(vec3(0, 2, 4), vec3(0, 0, -1), 1);
 
-    auto mat1 = std::make_shared<ptcpp::diffuse>(vec3(0.9, 0.9, 0.9));
-    auto mat2 = std::make_shared<ptcpp::diffuse>(vec3(0.2, 0.2, 0.8));
+    auto white = std::make_shared<ptcpp::diffuse>(vec3(0.9, 0.9, 0.9));
+    auto red = std::make_shared<ptcpp::diffuse>(vec3(0.9, 0.1, 0.1));
+    auto green = std::make_shared<ptcpp::diffuse>(vec3(0.1, 0.9, 0.1));
 
-    auto light1 = std::make_shared<ptcpp::light>(vec3(0));
-    auto light2 = std::make_shared<ptcpp::light>(vec3(0.2, 0.2, 0.8));
+    auto light_off = std::make_shared<ptcpp::light>(vec3(0));
+    auto light = std::make_shared<ptcpp::light>(vec3(5));
 
     aggregate aggregate;
-    aggregate.add(std::make_shared<sphere>(vec3(0, -10001, 0), 10000, mat1, light1));
-    aggregate.add(std::make_shared<sphere>(vec3(0, 0, -3), 1, mat2, light2));
+    // floor
+    aggregate.add(std::make_shared<cube>(vec3(0, -0.5, 0), vec3(10, 1, 10), white, light_off));
+    // ceil
+    aggregate.add(std::make_shared<cube>(vec3(0, 4.5, 0), vec3(10, 1, 10), white, light_off));
+    // wall
+    aggregate.add(std::make_shared<cube>(vec3(0, 2, -2.5), vec3(10, 10, 1), white, light_off));
+    // right green
+    aggregate.add(std::make_shared<cube>(vec3(2.5, 0, 0), vec3(1, 10, 10), green, light_off));
+    // left red
+    aggregate.add(std::make_shared<cube>(vec3(-2.5, 0, 0), vec3(1, 10, 10), red, light_off));
+    // light
+    aggregate.add(std::make_shared<cube>(vec3(0, 4, 0), vec3(1, 0.2, 1), white, light));
+
+    aggregate.add(std::make_shared<cube>(vec3(0.5, 1, -1), vec3(0.8, 2, 0.8), white, light_off));
+    aggregate.add(std::make_shared<sphere>(vec3(-0.5, 0.5, 0), 0.5, white, light_off));
 
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < img.width; i++)
