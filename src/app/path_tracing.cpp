@@ -24,13 +24,13 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate)
         hit res;
         if (aggregate.intersect(ra, res))
         {
-            vec3 n = res.hitNormal;
+            vec3 n = res.hit_normal;
             vec3 s, t;
             orthonormal_basis(n, s, t);
             vec3 wo_local = world_to_local(-ra.direction, s, n, t);
 
-            auto hitMaterial = res.hitSphere->material;
-            auto hitLight = res.hitSphere->light;
+            auto hitMaterial = res.material;
+            auto hitLight = res.light;
             col += throughput * hitLight->Le();
 
             vec3 brdf;
@@ -42,7 +42,7 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate)
 
             throughput *= brdf * cos / pdf;
 
-            ra = ray(res.hitPos + 0.001 * res.hitNormal, wi);
+            ra = ray(res.hit_pos + 0.001 * res.hit_normal, wi);
         }
         else
         {

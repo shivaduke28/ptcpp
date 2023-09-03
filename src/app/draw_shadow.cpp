@@ -31,18 +31,18 @@ namespace ptcpp::app
                 hit res;
                 if (aggregate.intersect(ray1, res))
                 {
-                    vec3 p = res.hitPos;
-                    vec3 n = res.hitNormal;
+                    vec3 p = res.hit_pos;
+                    vec3 n = res.hit_normal;
                     ray r(p + n * 0.001, light);
                     hit shadowRes;
                     if (aggregate.intersect(r, shadowRes))
                     {
-                        double lambert = std::max(0.0, dot(res.hitNormal, light));
+                        double lambert = std::max(0.0, dot(res.hit_normal, light));
                         img.set_pixel(i, j, vec3(lambert * 0.1));
                     }
                     else
                     {
-                        double lambert = std::max(0.0, dot(res.hitNormal, light));
+                        double lambert = std::max(0.0, dot(res.hit_normal, light));
                         img.set_pixel(i, j, vec3(lambert));
                     }
                 }

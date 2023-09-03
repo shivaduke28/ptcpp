@@ -8,21 +8,18 @@
 #include "material.h"
 #include "light.h"
 #include <memory>
+#include "shape.h"
 
 namespace ptcpp
 {
-    class sphere
+    class sphere : public shape
     {
     public:
         vec3 center;
         double radius;
-        std::shared_ptr<ptcpp::material> material; // BRDF
-        std::shared_ptr<ptcpp::light> light;       // Le
-
-        sphere(const vec3 &_center, double _radius) : center(_center), radius(_radius){};
 
         sphere(const vec3 &_center, double _radius, const std::shared_ptr<ptcpp::material> &_material,
-               const std::shared_ptr<ptcpp::light> &_light) : center(_center), radius(_radius), material(_material), light(_light){};
+               const std::shared_ptr<ptcpp::light> &_light) : center(_center), radius(_radius), shape(_material, _light){};
 
         bool intersect(const ray &ray, hit &res) const
         {
@@ -50,9 +47,10 @@ namespace ptcpp
             }
 
             res.t = t;
-            res.hitPos = ray(t);
-            res.hitNormal = normalize(res.hitPos - center);
-            res.hitSphere = this;
+            res.hit_pos = ray(t);
+            res.hit_normal = normalize(res.hit_pos - center);
+            res.material = material.get();
+            res.light = light.get();
 
             return true;
         };

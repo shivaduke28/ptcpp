@@ -81,13 +81,13 @@ namespace ptcpp::app
                 }
                 else
                 {
-                    vec3 n = hit.hitNormal;
+                    vec3 n = hit.hit_normal;
                     vec3 s, t;
                     orthonormal_basis(n, s, t);
                     vec3 wo_local = world_to_local(-ra.direction, s, n, t);
 
-                    auto hitMaterial = hit.hitSphere->material;
-                    auto hitLight = hit.hitSphere->light;
+                    auto hitMaterial = hit.hit_sphere->material;
+                    auto hitLight = hit.hit_sphere->light;
                     col += throughput * hitLight->Le();
 
                     vec3 brdf;
@@ -99,7 +99,7 @@ namespace ptcpp::app
 
                     throughput *= brdf * cos / pdf;
 
-                    ra = ray(hit.hitPos + 0.001 * hit.hitNormal, wi);
+                    ra = ray(hit.hit_pos + 0.001 * hit.hit_normal, wi);
                 }
             }
             else
