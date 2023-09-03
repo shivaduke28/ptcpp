@@ -81,7 +81,7 @@ namespace ptcpp::app
                 }
                 else
                 {
-                    vec3 n = hit.hit_normal;
+                    vec3 n = hit.normal;
                     vec3 s, t;
                     orthonormal_basis(n, s, t);
                     vec3 wo_local = world_to_local(-ra.direction, s, n, t);
@@ -99,7 +99,7 @@ namespace ptcpp::app
 
                     throughput *= brdf * cos / pdf;
 
-                    ra = ray(hit.hit_pos + 0.001 * hit.hit_normal, wi);
+                    ra = ray(hit.position + 0.001 * hit.normal, wi);
                 }
             }
             else

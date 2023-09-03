@@ -2,29 +2,29 @@
 #define AGGREGATE_H
 #include <memory>
 #include <vector>
-#include "sphere.h"
+#include "shape.h"
 namespace ptcpp
 {
     class aggregate
     {
     public:
-        std::vector<std::shared_ptr<sphere>> spheres;
+        std::vector<std::shared_ptr<shape>> shapes;
 
         aggregate(){};
 
-        aggregate(const std::vector<std::shared_ptr<sphere>> &_spheres) : spheres(_spheres)
+        aggregate(const std::vector<std::shared_ptr<shape>> &_spheres) : shapes(_spheres)
         {
         }
 
-        void add(const std::shared_ptr<sphere> &s)
+        void add(const std::shared_ptr<shape> &s)
         {
-            spheres.push_back(s);
+            shapes.push_back(s);
         };
 
         bool intersect(const ray &ray, hit &res) const
         {
             bool hit = false;
-            for (auto s : spheres)
+            for (auto s : shapes)
             {
                 ptcpp::hit res_temp;
                 if ((*s).intersect(ray, res_temp))

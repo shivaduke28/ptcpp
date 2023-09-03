@@ -47,8 +47,8 @@ namespace ptcpp
             }
 
             res.t = t;
-            res.hit_pos = ray(t);
-            res.hit_normal = normalize(res.hit_pos - center);
+            res.position = ray(t);
+            res.normal = normalize(res.position - center);
             res.material = material.get();
             res.light = light.get();
 

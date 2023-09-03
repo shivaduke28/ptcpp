@@ -11,8 +11,8 @@ namespace ptcpp
     {
     public:
         double t;
-        vec3 hit_pos;
-        vec3 hit_normal;
+        vec3 position;
+        vec3 normal;
         const ptcpp::material *material;
         const ptcpp::light *light;
 
