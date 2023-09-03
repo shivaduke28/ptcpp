@@ -9,6 +9,7 @@ namespace ptcpp
     {
     public:
         std::vector<std::shared_ptr<shape>> shapes;
+        double area;
 
         aggregate(){};
 
@@ -19,6 +20,7 @@ namespace ptcpp
         void add(const std::shared_ptr<shape> &s)
         {
             shapes.push_back(s);
+            area += (*s).area;
         };
 
         bool intersect(const ray &ray, hit &res) const

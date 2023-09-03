@@ -26,10 +26,16 @@ namespace ptcpp
             double z = std::sin(phi) * std::sin(theta);
 
             wi = vec3(x, y, z);
-            pdf = std::cos(theta) / M_PI;
+            pdf = y * M_1_PI;
 
-            return rho / M_PI;
+            return rho * M_1_PI;
         };
+
+        vec3 sample(const vec3 &wi, double &pdf) const
+        {
+            pdf = wi.y * M_1_PI;
+            return rho * M_1_PI;
+        }
     };
 }
 #endif

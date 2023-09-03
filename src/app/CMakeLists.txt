@@ -3,6 +3,7 @@
 # add_executable(super_sampling "${CMAKE_CURRENT_SOURCE_DIR}/super_sampling.cpp")
 # add_executable(montecarlo "${CMAKE_CURRENT_SOURCE_DIR}/montecarlo.cpp")
 add_executable(path_tracing "${CMAKE_CURRENT_SOURCE_DIR}/path_tracing.cpp")
+add_executable(nee "${CMAKE_CURRENT_SOURCE_DIR}/nee.cpp")
 # add_executable(volume "${CMAKE_CURRENT_SOURCE_DIR}/volume.cpp")
 # add_executable(phase_function "${CMAKE_CURRENT_SOURCE_DIR}/phase_function.cpp")
 

@@ -6,10 +6,15 @@ namespace ptcpp
 {
     class light
     {
-    public:
         vec3 color;
 
-        light(const vec3 &_color) : color(_color){};
+    public:
+        bool enable;
+
+        light(const vec3 &_color) : color(_color)
+        {
+            enable = color.length2() > 0.0;
+        };
 
         vec3 Le() const
         {

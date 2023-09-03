@@ -4,6 +4,7 @@
 #include "vec3.h"
 #include "ray.h"
 #include "hit.h"
+#include "random.h"
 
 namespace ptcpp
 {
@@ -17,7 +18,10 @@ namespace ptcpp
              const std::shared_ptr<ptcpp::material> &_material,
              const std::shared_ptr<ptcpp::light> &_light)
             : center(_center), side_length(_side_length),
-              shape(_material, _light){};
+              shape(_material, _light)
+        {
+            area = (side_length.x * side_length.y + side_length.y * side_length.z + side_length.z * side_length.x) * 2.0;
+        };
 
         bool intersect(const ray &ray, hit &hit) const
         {
@@ -58,5 +62,53 @@ namespace ptcpp
             }
             return true;
         };
+
+        vec3 sample(double &pdf) const
+        {
+            double r = rnd() * area;
+            double area_x = side_length.y * side_length.z;
+            double area_y = side_length.z * side_length.x;
+            double area_z = side_length.x * side_length.y;
+
+            double a = 0.0;
+
+            double u = rnd() - 0.5;
+            double v = rnd() - 0.5;
+
+            double weight(area_x);
+
+            pdf = 1.0 / area;
+
+            if (r < weight)
+            {
+                return center + vec3(side_length.x * 0.5, side_length.y * u, side_length.z * v);
+            }
+
+            weight += area_x;
+            if (r < weight)
+            {
+                return center + vec3(-side_length.x * 0.5, side_length.y * u, side_length.z * v);
+            }
+
+            weight += area_y;
+            if (r < weight)
+            {
+                return center + vec3(side_length.x * u, side_length.y * 0.5, side_length.z * v);
+            }
+
+            weight += area_y;
+            if (r < weight)
+            {
+                return center + vec3(side_length.x * u, -side_length.y * 0.5, side_length.z * v);
+            }
+
+            weight += area_z;
+            if (r < weight)
+            {
+                return center + vec3(side_length.x * u, side_length.y * v, side_length.z * 0.5);
+            }
+
+            return center + vec3(side_length.x * u, side_length.y * v, -side_length.z * 0.5);
+        }
     };
 }

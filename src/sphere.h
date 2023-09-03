@@ -9,17 +9,27 @@
 #include "light.h"
 #include <memory>
 #include "shape.h"
+#include "random.h"
 
 namespace ptcpp
 {
     class sphere : public shape
     {
+        double area_inv;
+
     public:
         vec3 center;
         double radius;
 
-        sphere(const vec3 &_center, double _radius, const std::shared_ptr<ptcpp::material> &_material,
-               const std::shared_ptr<ptcpp::light> &_light) : center(_center), radius(_radius), shape(_material, _light){};
+        sphere(const vec3 &_center,
+               double _radius,
+               const std::shared_ptr<ptcpp::material> &_material,
+               const std::shared_ptr<ptcpp::light> &_light)
+            : center(_center), radius(_radius), shape(_material, _light)
+        {
+            area = 4.0 * M_PI * radius * radius;
+            area_inv = 1.0 / area;
+        };
 
         bool intersect(const ray &ray, hit &res) const
         {
@@ -54,6 +64,20 @@ namespace ptcpp
 
             return true;
         };
+
+        vec3 sample(double &pdf) const
+        {
+            // double phi = 2 * M_PI * rnd();
+            double cos_phi = cos(2 * M_PI * rnd());
+            double cos_theta = 1 - 2 * rnd();
+            double sin_theta = std::sqrt(1 - cos_theta * cos_theta);
+            // double theta = acos(1 - 2 * rnd());
+            double x = sin_theta * cos_phi;
+            double z = sin_theta * sqrt(1 - cos_phi * cos_phi);
+            double y = cos_theta;
+            pdf = area_inv;
+            return vec3(x * radius + center.x, y * radius + center.y, z * radius + center.z);
+        }
     };
 }
 

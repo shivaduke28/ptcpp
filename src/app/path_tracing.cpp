@@ -82,15 +82,15 @@ int main()
 
     aggregate aggregate;
     // floor
-    aggregate.add(std::make_shared<cube>(vec3(0, -0.5, 0), vec3(10, 1, 10), white, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(0, -0.5, 0), vec3(5, 1, 5), white, light_off));
     // ceil
-    aggregate.add(std::make_shared<cube>(vec3(0, 4.5, 0), vec3(10, 1, 10), white, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(0, 4.5, 0), vec3(5, 1, 5), white, light_off));
     // wall
-    aggregate.add(std::make_shared<cube>(vec3(0, 2, -2.5), vec3(10, 10, 1), white, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(0, 2, -2.5), vec3(5, 5, 1), white, light_off));
     // right green
-    aggregate.add(std::make_shared<cube>(vec3(2.5, 0, 0), vec3(1, 10, 10), green, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(2.5, 2.5, 0), vec3(1, 5, 5), green, light_off));
     // left red
-    aggregate.add(std::make_shared<cube>(vec3(-2.5, 0, 0), vec3(1, 10, 10), red, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(-2.5, 2.5, 0), vec3(1, 5, 5), red, light_off));
     // light
     aggregate.add(std::make_shared<cube>(vec3(0, 4, 0), vec3(1, 0.2, 1), white, light));
 
