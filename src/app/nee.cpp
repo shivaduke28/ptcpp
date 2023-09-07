@@ -144,6 +144,7 @@ int main()
     auto light = std::make_shared<ptcpp::light>(vec3(5));
 
     aggregate aggregate;
+    scene_lights scene_lights;
     // floor
     aggregate.add(std::make_shared<cube>(vec3(0, -0.5, 0), vec3(5, 1, 5), white, light_off));
     // ceil
@@ -155,14 +156,12 @@ int main()
     // left red
     aggregate.add(std::make_shared<cube>(vec3(-2.5, 2.5, 0), vec3(1, 5, 5), red, light_off));
     // light
-    aggregate.add(std::make_shared<cube>(vec3(0, 4, 0), vec3(1, 0.2, 1), white, light));
+    auto cube_light = std::make_shared<cube>(vec3(0, 4, 0), vec3(1, 0.2, 1), white, light);
+    aggregate.add(cube_light);
+    scene_lights.add(cube_light);
 
     aggregate.add(std::make_shared<cube>(vec3(0.5, 1, -1), vec3(0.8, 2, 0.8), white, light_off));
     aggregate.add(std::make_shared<sphere>(vec3(-0.5, 0.5, 0), 0.5, white, light_off));
-
-    // todo: aggregateと統一する
-    scene_lights scene_lights;
-    scene_lights.add(std::make_shared<cube>(vec3(0, 4, 0), vec3(1, 0.2, 1), white, light));
 
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < img.width; i++)
