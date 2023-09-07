@@ -18,22 +18,20 @@ namespace ptcpp
             double u = rnd();
             double v = rnd();
 
-            double theta = 0.5 * std::acos(1 - 2 * u);
+            double cos_theta = std::sqrt(1.0 - u);
+            double sin_theta = std::sqrt(u);
             double phi = 2 * M_PI * v;
+            double cos_phi = std::cos(phi);
+            double sin_phi = std::sqrt(1.0 - cos_phi * cos_phi);
 
-            double x = std::cos(phi) * std::sin(theta);
-            double y = std::cos(theta);
-            double z = std::sin(phi) * std::sin(theta);
-
-            wi = vec3(x, y, z);
-            pdf = y * M_1_PI;
+            wi = vec3(cos_phi * sin_theta, cos_theta, sin_phi * sin_theta);
+            pdf = cos_theta * M_1_PI;
 
             return rho * M_1_PI;
         };
 
-        vec3 sample(const vec3 &wi, double &pdf) const
+        vec3 eval_brdf(const vec3 &wo, const vec3 &wi) const
         {
-            pdf = wi.y * M_1_PI;
             return rho * M_1_PI;
         }
     };

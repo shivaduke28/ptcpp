@@ -20,7 +20,6 @@ const double ROULETTE = 0.9;
 class scene_lights
 {
     std::vector<std::shared_ptr<shape>> shapes;
-    std::vector<double> areas;
 
 public:
     double area;
@@ -29,30 +28,30 @@ public:
     void add(const std::shared_ptr<shape> &s)
     {
         shapes.push_back(s);
-        double a = (*s).area;
-        areas.push_back(a);
-        area += a;
+        area += (*s).area;
     };
 
     vec3 sample(double &pdf) const
     {
         double r = rnd() * area;
-        double sum(0);
         int length = shapes.size();
         for (int i = 0; i < length; ++i)
         {
-            double w = areas[i];
-            sum += w;
-            if (r < sum || i == length - 1)
+            auto shape = shapes[i];
+            double a = shape->area;
+            if (r < a || i == length - 1)
             {
-                pdf = w / area;
-                auto shape = shapes[i];
-                double pdf2;
-                vec3 pos = (*shape).sample(pdf2);
-                pdf *= pdf2;
+                double shape_pdf;
+                vec3 pos = (*shape).sample(shape_pdf);
+                pdf = a / area * shape_pdf;
                 return pos;
             }
+            r -= a;
         }
+
+        // not reached
+        pdf = 1.0;
+        return vec3(0, 1, 0);
     }
 };
 
@@ -75,19 +74,16 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate, const scene_light
             vec3 position = ray_hit.position;
             vec3 s, t;
             orthonormal_basis(normal, s, t);
+            vec3 wo_local = world_to_local(-ra.direction, s, normal, t);
 
             auto material = ray_hit.material;
             auto light = ray_hit.light;
-            if (depth == 0)
+            if (light->enable)
             {
-                col += throughput * light->Le();
-                if (light->enable)
+                if (depth == 0)
                 {
-                    break;
+                    col += throughput * light->Le();
                 }
-            }
-            else if (light->enable)
-            {
                 break;
             }
 
@@ -97,26 +93,22 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate, const scene_light
             vec3 diff = light_pos - position;
             double light_distance = diff.length();
             vec3 light_ray_dir = diff / light_distance;
-            ray light_ray(position + 0.001 * normal, light_ray_dir);
+            ray light_ray(position + 0.0001 * normal, light_ray_dir);
             hit light_hit;
             if (aggregate.intersect(light_ray, light_hit))
             {
-                // visible (バイアスもうちょい丁寧にしたい)
-                if (light_hit.t >= light_distance - 0.01)
+                // visible
+                if (light_hit.t >= light_distance - 0.001)
                 {
                     double G = std::abs(dot(light_ray_dir, normal)) *
                                std::abs(dot(-light_ray_dir, light_hit.normal)) / (light_distance * light_distance);
                     vec3 light_ray_dir_local = world_to_local(light_ray_dir, s, normal, t);
-                    // pdf使ってないのでsample_brdfみたいな関数にしたい
-                    double x;
-                    vec3 light_brdf = material->sample(light_ray_dir_local, x);
-                    auto l = light_hit.light;
-                    col += throughput * light_brdf * G * l->Le() / light_pdf;
+                    vec3 light_brdf = material->eval_brdf(wo_local, light_ray_dir_local);
+                    col += throughput * light_brdf * G * light_hit.light->Le() / light_pdf;
                 }
             }
 
             double pdf;
-            vec3 wo_local = world_to_local(-ra.direction, s, normal, t);
             vec3 wi_local;
             vec3 brdf = material->sample(wo_local, wi_local, pdf);
             double cos = wi_local.y;
@@ -124,7 +116,7 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate, const scene_light
 
             throughput *= brdf * cos / pdf;
 
-            ra = ray(position + 0.001 * normal, wi);
+            ra = ray(position + 0.0001 * normal, wi);
         }
         else
         {
@@ -171,8 +163,6 @@ int main()
     // todo: aggregateと統一する
     scene_lights scene_lights;
     scene_lights.add(std::make_shared<cube>(vec3(0, 4, 0), vec3(1, 0.2, 1), white, light));
-
-    std::cout << scene_lights.area << " / " << aggregate.area << std::endl;
 
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < img.width; i++)
