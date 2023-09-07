@@ -64,6 +64,10 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate, const scene_light
 
     for (int depth = 0; depth < MAX_DEPTH; depth++)
     {
+        if (rnd() >= ROULETTE)
+            break;
+        throughput /= ROULETTE;
+
         hit ray_hit;
         if (aggregate.intersect(ra, ray_hit))
         {
@@ -71,42 +75,50 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate, const scene_light
             vec3 position = ray_hit.position;
             vec3 s, t;
             orthonormal_basis(normal, s, t);
-            vec3 wo_local = world_to_local(-ra.direction, s, normal, t);
 
             auto material = ray_hit.material;
             auto light = ray_hit.light;
-            if (depth > 0 && light->enable)
+            if (depth == 0)
+            {
+                col += throughput * light->Le();
+                if (light->enable)
+                {
+                    break;
+                }
+            }
+            else if (light->enable)
+            {
                 break;
-
-            // depth == 0のときしか意味がないはず
-            col += throughput * light->Le();
+            }
 
             double light_pdf;
             vec3 light_pos = scene_lights.sample(light_pdf);
 
-            double light_distance2 = (light_pos - position).length2();
-            vec3 light_ray_dir = normalize(light_pos - position);
+            vec3 diff = light_pos - position;
+            double light_distance = diff.length();
+            vec3 light_ray_dir = diff / light_distance;
             ray light_ray(position + 0.001 * normal, light_ray_dir);
             hit light_hit;
             if (aggregate.intersect(light_ray, light_hit))
             {
-                // visible
-                if (light_hit.t * light_hit.t >= light_distance2 - 0.001)
+                // visible (バイアスもうちょい丁寧にしたい)
+                if (light_hit.t >= light_distance - 0.01)
                 {
-                    double G = std::abs(dot(light_ray.direction, normal)) *
-                               std::abs(dot(-light_ray.direction, light_hit.normal)) / light_distance2;
+                    double G = std::abs(dot(light_ray_dir, normal)) *
+                               std::abs(dot(-light_ray_dir, light_hit.normal)) / (light_distance * light_distance);
                     vec3 light_ray_dir_local = world_to_local(light_ray_dir, s, normal, t);
+                    // pdf使ってないのでsample_brdfみたいな関数にしたい
                     double x;
                     vec3 light_brdf = material->sample(light_ray_dir_local, x);
                     auto l = light_hit.light;
-                    col += throughput * light_brdf * G / light_pdf * l->Le(); // * scene_lights.area / aggregate.area;
+                    col += throughput * light_brdf * G * l->Le() / light_pdf;
                 }
             }
 
-            vec3 brdf;
             double pdf;
+            vec3 wo_local = world_to_local(-ra.direction, s, normal, t);
             vec3 wi_local;
-            brdf = material->sample(wo_local, wi_local, pdf);
+            vec3 brdf = material->sample(wo_local, wi_local, pdf);
             double cos = wi_local.y;
             vec3 wi = local_to_world(wi_local, s, normal, t);
 
@@ -119,10 +131,6 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate, const scene_light
             col += throughput * vec3(0.00);
             break;
         }
-
-        if (rnd() >= ROULETTE)
-            break;
-        throughput /= ROULETTE;
     }
 
     return col;
