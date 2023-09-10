@@ -31,16 +31,17 @@ double transmittance(double distance)
     return std::exp(-EXTINCTION * distance);
 }
 
-vec3 sample_Henyey_Greenstein(vec3 wi, double g, double &pdf)
+vec3 sample_Henyey_Greenstein(vec3 wi, double g)
 {
     double phi = 2 * M_PI * rnd();
     double sqrTerm = (1 - g * g) / (1 + g - 2 * g * rnd());
     double cos_theta = -(1 + g * g - sqrTerm * sqrTerm) / (2 * g);
     double sin_theta = std::sqrt(1 - cos_theta * cos_theta);
 
-    double x = cos(phi) * sin_theta;
+    double cos_phi = cos(phi);
+    double x = cos_phi * sin_theta;
     double y = cos_theta;
-    double z = sin_theta * sin(phi);
+    double z = sin_theta * sqrt(1 - cos_phi * cos_phi);
 
     vec3 local(x, y, z);
     vec3 s, t;
@@ -76,8 +77,7 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
 
             if (s < hit.t)
             {
-                double pdf = 1;
-                ra = ray(ra(s), sample_Henyey_Greenstein(ra.direction, HG_G, pdf));
+                ra = ray(ra(s), sample_Henyey_Greenstein(ra.direction, HG_G));
                 // ray = Ray(ray(s), sample_in_scattering(pdf));
                 throughput *= SCATTERING / (EXTINCTION);
             }
@@ -90,7 +90,11 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
 
                 auto hitMaterial = hit.material;
                 auto hitLight = hit.light;
-                col += throughput * hitLight->Le();
+                if (hitLight->enable)
+                {
+                    col += throughput * hitLight->Le();
+                    break;
+                }
 
                 vec3 brdf;
                 double pdf;
