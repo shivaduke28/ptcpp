@@ -27,7 +27,7 @@ namespace ptcpp::app
             for (int j = 0; j < img.height; j++)
             {
                 double v = 2.0 * j * heigthtInv - 1.0;
-                ray ray1 = cam.getRay(-u, -v);
+                ray ray1 = cam.get_ray(-u, -v);
                 hit res;
                 if (aggregate.intersect(ray1, res))
                 {

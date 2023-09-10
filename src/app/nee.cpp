@@ -142,7 +142,7 @@ int main()
                 double u = (2.0 * (i + rnd()) - img.width) / img.width;
                 double v = (2.0 * (j + rnd()) - img.height) / img.height;
 
-                ray ray = cam.getRay(-u, -v);
+                ray ray = cam.get_ray(-u, -v);
 
                 vec3 col = radiance(ray, aggregate);
                 img.add_pixel(i, j, col);

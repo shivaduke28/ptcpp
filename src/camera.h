@@ -17,7 +17,7 @@ namespace ptcpp
             orthonormal_basis(cam_forward, cam_right, cam_up);
         };
 
-        virtual ray getRay(double u, double v) const = 0;
+        virtual ray get_ray(double u, double v) const = 0;
     };
 
     class pinhole_camera : public camera
@@ -27,7 +27,7 @@ namespace ptcpp
         pinhole_camera(const vec3 &_camPos, const vec3 &_camForward, double _pinholeDist)
             : camera(_camPos, _camForward), pinhole_dist(_pinholeDist){};
 
-        ray getRay(double u, double v) const
+        ray get_ray(double u, double v) const
         {
             vec3 pinholePos = cam_pos + pinhole_dist * cam_forward;
             vec3 sensorPos = cam_pos + u * cam_right + v * cam_up;
