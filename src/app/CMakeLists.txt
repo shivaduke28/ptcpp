@@ -1,4 +1,5 @@
 add_executable(nee "${CMAKE_CURRENT_SOURCE_DIR}/nee.cpp")
+add_executable(volume "${CMAKE_CURRENT_SOURCE_DIR}/volume.cpp")
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/..")
 
