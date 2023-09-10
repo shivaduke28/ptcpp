@@ -160,7 +160,8 @@ int main()
     aggregate.add(cube_light);
     scene_lights.add(cube_light);
 
-    aggregate.add(std::make_shared<cube>(vec3(0.5, 1, -1), vec3(0.8, 2, 0.8), white, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(0.5, 1, -1), vec3(0.8, 2, 0.8), quaternion::axis_y(M_PI / 4.0), white, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(-0.5, 2.5, 0.2), vec3(1.5, 0.5, 0.5), quaternion::axis_x(M_PI / 4.0), white, light_off));
     aggregate.add(std::make_shared<sphere>(vec3(-0.5, 0.5, 0), 0.5, white, light_off));
 
 #pragma omp parallel for schedule(dynamic, 1)
