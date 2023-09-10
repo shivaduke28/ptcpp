@@ -21,6 +21,7 @@ const double SCATTERING = 0.15;
 const double ABSORPTION = 0.0;
 const double EXTINCTION = SCATTERING + ABSORPTION;
 const double HG_G = 0.5;
+const double NEE_RATIO = 0.5;
 
 template <class T>
 void log(T text)
@@ -118,7 +119,7 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
                     {
                         double G = std::abs(dot(-light_ray_dir, light_hit.normal)) / (light_distance * light_distance);
                         double phase = eval_henyey_greenstein(dot(-ra.direction, light_ray_dir), HG_G);
-                        col += transmittance(light_distance) * throughput * phase * G * light_le / light_pdf;
+                        col += NEE_RATIO * transmittance(light_distance) * throughput * phase * G * light_le / light_pdf;
                     }
                 }
 #endif
@@ -138,9 +139,9 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
                 if (light->enable)
                 {
 #if NEE
-                    if (depth == 0)
+                    // if (depth == 0)
                     {
-                        col += throughput * light->Le();
+                        col += throughput * light->Le() * (1.0 - NEE_RATIO);
                     }
 #else
                     col += throughput * light->Le();
@@ -167,7 +168,7 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
                                    std::abs(dot(-light_ray_dir, light_hit.normal)) / (light_distance * light_distance);
                         vec3 light_ray_dir_local = world_to_local(light_ray_dir, s, normal, t);
                         vec3 light_brdf = material->eval_brdf(wo_local, light_ray_dir_local);
-                        col += transmittance(light_distance) * throughput * light_brdf * G * light_le / light_pdf;
+                        col += NEE_RATIO * transmittance(light_distance) * throughput * light_brdf * G * light_le / light_pdf;
                     }
                 }
 #endif
