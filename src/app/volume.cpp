@@ -15,15 +15,18 @@ using namespace ptcpp;
 
 const int MAX_DEPTH = 500;
 const double ROULETTE = 0.9;
+const double ROULETTE_INV = 1.0 / ROULETTE;
 const double SCATTERING = 0.15;
 const double ABSORPTION = 0.0;
 const double EXTINCTION = SCATTERING + ABSORPTION;
+const double EXTINCTION_INV = 1.0 / EXTINCTION;
+const double SCATTERING_ALBEDO = SCATTERING * EXTINCTION_INV;
 const double HG_G = 0.5;
 
 double sample_distance()
 {
     double xi = rnd();
-    double s = -std::log(1 - xi) / EXTINCTION;
+    double s = -std::log(1 - xi) * EXTINCTION_INV;
     return s;
 }
 
@@ -35,12 +38,12 @@ double transmittance(double distance)
 vec3 sample_henyey_greenstein(vec3 wi, double g, double &pdf)
 {
     double phi = 2.0 * M_PI * rnd();
-    double sqrTerm = (1.0 - g * g) / (1.0 + g - 2.0 * g * rnd());
-    double cos_theta = -(1.0 + g * g - sqrTerm * sqrTerm) / (2.0 * g);
+    double sqr_term = (1.0 - g * g) / (1.0 + g - 2.0 * g * rnd());
+    double cos_theta = -(1.0 + g * g - sqr_term * sqr_term) / (2.0 * g);
     double sin_theta = std::sqrt(1.0 - cos_theta * cos_theta);
 
     double cos_phi = cos(phi);
-    double x = cos_phi * sin_theta;
+    double x = sin_theta * cos_phi;
     double y = cos_theta;
     double z = sin_theta * sqrt(1 - cos_phi * cos_phi);
 
@@ -58,6 +61,7 @@ double eval_henyey_greenstein(double cos_theta, double g)
     return (1.0 - g2) / (4.0 * M_PI * pow(1.0 + g2 + 2.0 * g * cos_theta, 1.5));
 }
 
+// not used
 vec3 sample_in_scattering(double &pdf)
 {
     double phi = 2 * M_PI * rnd();
@@ -80,7 +84,7 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
     {
         if (rnd() >= ROULETTE)
             break;
-        throughput /= ROULETTE;
+        throughput *= ROULETTE_INV;
 
         hit ray_hit;
         if (aggregate.intersect(ra, ray_hit))
@@ -88,29 +92,32 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
             double s = sample_distance();
             if (s < ray_hit.t)
             {
-                throughput *= SCATTERING / (EXTINCTION);
+                throughput *= SCATTERING_ALBEDO;
 
-                double light_pdf;
-                vec3 light_le;
-                vec3 light_normal;
-                vec3 light_pos = aggregate.sample_light(light_pdf, light_normal, light_le);
-
-                vec3 position = ra(s);
-                vec3 diff = light_pos - position;
-                double light_distance = diff.length();
-                vec3 light_ray_dir = diff / light_distance;
-                ray light_ray(position, light_ray_dir);
-
-                hit light_hit;
-                if (aggregate.intersect(light_ray, light_hit))
+                // NEE
                 {
-                    // visible
-                    if (light_hit.t >= light_distance - 0.001)
+                    double light_pdf;
+                    vec3 light_le;
+                    vec3 light_normal;
+                    vec3 light_pos = aggregate.sample_light(light_pdf, light_normal, light_le);
+
+                    vec3 position = ra(s);
+                    vec3 diff = light_pos - position;
+                    double light_distance = diff.length();
+                    vec3 light_ray_dir = diff / light_distance;
+                    ray light_ray(position, light_ray_dir);
+
+                    hit light_hit;
+                    if (aggregate.intersect(light_ray, light_hit))
                     {
-                        double G_over_cos_theta = std::abs(dot(-light_ray_dir, light_normal)) / (light_distance * light_distance);
-                        double phase = eval_henyey_greenstein(dot(-ra.direction, light_ray_dir), HG_G);
-                        double mis_weight = light_pdf / (light_pdf + phase * G_over_cos_theta);
-                        col += mis_weight * transmittance(light_distance) * throughput * phase * G_over_cos_theta * light_le / light_pdf;
+                        // visible
+                        if (light_hit.t >= light_distance - 0.001)
+                        {
+                            double G_over_cos_theta = std::abs(dot(-light_ray_dir, light_normal)) / (light_distance * light_distance);
+                            double phase = eval_henyey_greenstein(dot(-ra.direction, light_ray_dir), HG_G);
+                            double mis_weight = light_pdf / (light_pdf + phase * G_over_cos_theta);
+                            col += mis_weight * transmittance(light_distance) * throughput * phase * G_over_cos_theta * light_le / light_pdf;
+                        }
                     }
                 }
                 ra = ray(ra(s), sample_henyey_greenstein(-ra.direction, HG_G, last_pt_pdf));
@@ -120,12 +127,14 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
 
                 vec3 normal = ray_hit.normal;
                 vec3 position = ray_hit.position;
+                auto material = ray_hit.material;
+                auto light = ray_hit.light;
+
                 vec3 s, t;
                 orthonormal_basis(normal, s, t);
                 vec3 wo_local = world_to_local(-ra.direction, s, normal, t);
 
-                auto material = ray_hit.material;
-                auto light = ray_hit.light;
+                // path tracing
                 if (light->enable)
                 {
                     if (depth == 0)
@@ -134,35 +143,38 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
                     }
                     else
                     {
-                        double cos_theta_over_G = ray_hit.t * ray_hit.t / std::abs(dot(ra.direction, normal));
-                        col += throughput * light->Le() * last_pt_pdf / (last_pt_pdf + (1.0 / aggregate.light_area) * cos_theta_over_G);
+                        double cos_theta_over_G = ray_hit.t * ray_hit.t / std::abs(wo_local.y);
+                        double mis_weight = last_pt_pdf / (last_pt_pdf + aggregate.light_area_inv * cos_theta_over_G);
+                        col += throughput * light->Le() * mis_weight;
                     }
                     break;
                 }
 
-                double light_pdf;
-                vec3 light_le;
-                vec3 light_normal;
-                vec3 light_pos = aggregate.sample_light(light_pdf, light_normal, light_le);
-
-                vec3 diff = light_pos - position;
-                double light_distance = diff.length();
-                vec3 light_ray_dir = diff / light_distance;
-                ray light_ray(position + 0.0001 * normal, light_ray_dir);
-
-                hit light_hit;
-                if (aggregate.intersect(light_ray, light_hit))
+                // NEE
                 {
-                    // visible
-                    if (light_hit.t >= light_distance - 0.01)
+                    double light_pdf;
+                    vec3 light_le;
+                    vec3 light_normal;
+                    vec3 light_pos = aggregate.sample_light(light_pdf, light_normal, light_le);
+
+                    vec3 diff = light_pos - position;
+                    double light_distance = diff.length();
+                    vec3 light_ray_dir = diff / light_distance;
+                    ray light_ray(position + 0.0001 * normal, light_ray_dir);
+
+                    hit light_hit;
+                    if (aggregate.intersect(light_ray, light_hit))
                     {
-                        vec3 light_ray_dir_local = world_to_local(light_ray_dir, s, normal, t);
-                        double light_brdf_pdf;
-                        double G_over_cos_theta = std::abs(dot(-light_ray_dir, light_normal)) / (light_distance * light_distance);
-                        double G = G_over_cos_theta * std::abs(dot(light_ray_dir, normal));
-                        vec3 light_brdf = material->eval_brdf(wo_local, light_ray_dir_local, light_brdf_pdf);
-                        double mis_weight = light_pdf / (light_pdf + light_brdf_pdf * G_over_cos_theta);
-                        col += mis_weight * transmittance(light_distance) * throughput * light_brdf * G * light_le / light_pdf;
+                        if (light_hit.t >= light_distance - 0.01)
+                        {
+                            vec3 light_ray_dir_local = world_to_local(light_ray_dir, s, normal, t);
+                            double light_brdf_pdf;
+                            double G_over_cos_theta = std::abs(dot(-light_ray_dir, light_normal)) / (light_distance * light_distance);
+                            double G = G_over_cos_theta * std::abs(light_ray_dir_local.y);
+                            vec3 light_brdf = material->eval_brdf(wo_local, light_ray_dir_local, light_brdf_pdf);
+                            double mis_weight = light_pdf / (light_pdf + light_brdf_pdf * G_over_cos_theta);
+                            col += mis_weight * transmittance(light_distance) * throughput * light_brdf * G * light_le / light_pdf;
+                        }
                     }
                 }
 
@@ -190,7 +202,7 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
 int main()
 {
     // サンプリング数
-    const int N = 100;
+    const int N = 1000;
 
     image img(512, 512);
     ptcpp::pinhole_camera cam(vec3(0, 2, 4), vec3(0, 0, -1), 1);

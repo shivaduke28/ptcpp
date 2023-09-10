@@ -134,8 +134,6 @@ namespace ptcpp
             double area_y = side_length.z * side_length.x;
             double area_z = side_length.x * side_length.y;
 
-            double a = 0.0;
-
             double u = rnd() - 0.5;
             double v = rnd() - 0.5;
 

@@ -12,6 +12,7 @@ namespace ptcpp
         std::vector<std::shared_ptr<shape>> shapes;
         std::vector<std::shared_ptr<shape>> light_shapes;
         double light_area;
+        double light_area_inv;
 
         aggregate(){};
 
@@ -25,6 +26,7 @@ namespace ptcpp
                     light_area += s->area;
                 }
             }
+            light_area_inv = 1.0 / light_area;
         }
 
         void add(const std::shared_ptr<shape> &s)
@@ -34,6 +36,7 @@ namespace ptcpp
             {
                 light_shapes.push_back(s);
                 light_area += s->area;
+                light_area_inv = 1.0 / light_area;
             }
         };
 
@@ -82,7 +85,7 @@ namespace ptcpp
         {
             double r = rnd() * light_area;
             int length = light_shapes.size();
-            pdf = 1.0 / light_area;
+            pdf = light_area_inv;
             for (int i = 0; i < length; ++i)
             {
                 auto shape = light_shapes[i];
