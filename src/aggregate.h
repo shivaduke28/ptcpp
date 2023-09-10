@@ -3,24 +3,38 @@
 #include <memory>
 #include <vector>
 #include "shape.h"
+#include "random.h"
 namespace ptcpp
 {
     class aggregate
     {
     public:
         std::vector<std::shared_ptr<shape>> shapes;
-        double area;
+        std::vector<std::shared_ptr<shape>> light_shapes;
+        double light_area;
 
         aggregate(){};
 
-        aggregate(const std::vector<std::shared_ptr<shape>> &_spheres) : shapes(_spheres)
+        aggregate(const std::vector<std::shared_ptr<shape>> &_shapes) : shapes(_shapes)
         {
+            for (auto s : shapes)
+            {
+                if (s->light->enable)
+                {
+                    light_shapes.push_back(s);
+                    light_area += s->area;
+                }
+            }
         }
 
         void add(const std::shared_ptr<shape> &s)
         {
             shapes.push_back(s);
-            area += (*s).area;
+            if (s->light->enable)
+            {
+                light_shapes.push_back(s);
+                light_area += s->area;
+            }
         };
 
         bool intersect(const ray &ray, hit &res) const
@@ -39,6 +53,29 @@ namespace ptcpp
                 }
             }
             return hit;
+        }
+
+        vec3 sample_light(double &pdf) const
+        {
+            double r = rnd() * light_area;
+            int length = light_shapes.size();
+            for (int i = 0; i < length; ++i)
+            {
+                auto shape = light_shapes[i];
+                double a = shape->area;
+                if (r < a || i == length - 1)
+                {
+                    double shape_pdf;
+                    vec3 pos = (*shape).sample(shape_pdf);
+                    pdf = a / light_area * shape_pdf;
+                    return pos;
+                }
+                r -= a;
+            }
+
+            // not reached
+            pdf = 1.0;
+            return vec3(0, 1, 0);
         }
     };
 }

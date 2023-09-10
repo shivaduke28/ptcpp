@@ -19,45 +19,7 @@ using namespace ptcpp;
 const int MAX_DEPTH = 500;
 const double ROULETTE = 0.9;
 
-class scene_lights
-{
-    std::vector<std::shared_ptr<shape>> shapes;
-
-public:
-    double area;
-    scene_lights(){};
-
-    void add(const std::shared_ptr<shape> &s)
-    {
-        shapes.push_back(s);
-        area += (*s).area;
-    };
-
-    vec3 sample(double &pdf) const
-    {
-        double r = rnd() * area;
-        int length = shapes.size();
-        for (int i = 0; i < length; ++i)
-        {
-            auto shape = shapes[i];
-            double a = shape->area;
-            if (r < a || i == length - 1)
-            {
-                double shape_pdf;
-                vec3 pos = (*shape).sample(shape_pdf);
-                pdf = a / area * shape_pdf;
-                return pos;
-            }
-            r -= a;
-        }
-
-        // not reached
-        pdf = 1.0;
-        return vec3(0, 1, 0);
-    }
-};
-
-vec3 radiance(const ray &init_ray, const aggregate &aggregate, const scene_lights &scene_lights)
+vec3 radiance(const ray &init_ray, const aggregate &aggregate)
 {
     vec3 col;
     vec3 throughput(1);
@@ -95,7 +57,7 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate, const scene_light
 
 #if NEE
             double light_pdf;
-            vec3 light_pos = scene_lights.sample(light_pdf);
+            vec3 light_pos = aggregate.sample_light(light_pdf);
 
             vec3 diff = light_pos - position;
             double light_distance = diff.length();
@@ -139,7 +101,7 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate, const scene_light
 int main()
 {
     // サンプリング数
-    const int N = 100;
+    const int N = 10;
 
     image img(512, 512);
     ptcpp::pinhole_camera cam(vec3(0, 2, 4), vec3(0, 0, -1), 1);
@@ -152,7 +114,6 @@ int main()
     auto light = std::make_shared<ptcpp::light>(vec3(5));
 
     aggregate aggregate;
-    scene_lights scene_lights;
     // floor
     aggregate.add(std::make_shared<cube>(vec3(5, 1, 5), vec3(0, -0.5, 0), white, light_off));
     // ceil
@@ -166,7 +127,6 @@ int main()
     // light
     auto cube_light = std::make_shared<cube>(vec3(1, 0.2, 1), vec3(0, 4, 0), white, light);
     aggregate.add(cube_light);
-    scene_lights.add(cube_light);
 
     aggregate.add(std::make_shared<cube>(vec3(0.8, 2, 0.8), vec3(0.5, 1, -1), quaternion::axis_y(M_PI / 4.0), white, light_off));
     aggregate.add(std::make_shared<cube>(vec3(1.5, 0.5, 0.5), vec3(-0.5, 2.5, 0.2), quaternion::axis_x(M_PI / 4.0), white, light_off));
@@ -184,7 +144,7 @@ int main()
 
                 ray ray = cam.getRay(-u, -v);
 
-                vec3 col = radiance(ray, aggregate, scene_lights);
+                vec3 col = radiance(ray, aggregate);
                 img.add_pixel(i, j, col);
             }
 
