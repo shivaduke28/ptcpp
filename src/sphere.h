@@ -78,6 +78,21 @@ namespace ptcpp
             pdf = area_inv;
             return vec3(x * radius + center.x, y * radius + center.y, z * radius + center.z);
         }
+
+        vec3 sample(vec3 &normal, double &pdf) const
+        {
+            // double phi = 2 * M_PI * rnd();
+            double cos_phi = cos(2 * M_PI * rnd());
+            double cos_theta = 1 - 2 * rnd();
+            double sin_theta = std::sqrt(1 - cos_theta * cos_theta);
+            // double theta = acos(1 - 2 * rnd());
+            double x = sin_theta * cos_phi;
+            double z = sin_theta * sqrt(1 - cos_phi * cos_phi);
+            double y = cos_theta;
+            pdf = area_inv;
+            normal = vec3(x, y, z);
+            return vec3(x * radius + center.x, y * radius + center.y, z * radius + center.z);
+        }
     };
 }
 

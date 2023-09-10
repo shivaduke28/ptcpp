@@ -3,6 +3,7 @@
 
 #include "material.h"
 #include "random.h"
+#include "cmath"
 namespace ptcpp
 {
     class diffuse : public material
@@ -32,6 +33,12 @@ namespace ptcpp
 
         vec3 eval_brdf(const vec3 &wo, const vec3 &wi) const
         {
+            return rho * M_1_PI;
+        }
+
+        vec3 eval_brdf(const vec3 &wo, const vec3 &wi, double &pdf) const
+        {
+            pdf = std::max(0.0, wi.y) * M_1_PI;
             return rho * M_1_PI;
         }
     };

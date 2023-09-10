@@ -8,6 +8,7 @@ namespace ptcpp
     public:
         virtual vec3 sample(const vec3 &wo, vec3 &wi, double &pdf) const = 0;
         virtual vec3 eval_brdf(const vec3 &wo, const vec3 &wi) const = 0;
+        virtual vec3 eval_brdf(const vec3 &wo, const vec3 &wi, double &pdf) const = 0;
     };
 }
 #endif

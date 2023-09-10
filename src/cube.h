@@ -126,5 +126,60 @@ namespace ptcpp
 
             return trans.local_to_world(vec3(side_length.x * u, side_length.y * v, -side_length.z * 0.5));
         };
+
+        vec3 sample(vec3 &normal, double &pdf) const
+        {
+            double r = rnd() * area;
+            double area_x = side_length.y * side_length.z;
+            double area_y = side_length.z * side_length.x;
+            double area_z = side_length.x * side_length.y;
+
+            double a = 0.0;
+
+            double u = rnd() - 0.5;
+            double v = rnd() - 0.5;
+
+            double weight(area_x);
+
+            pdf = 1.0 / area;
+
+            if (r < weight)
+            {
+                normal = trans.local_to_world_dir(vec3(1, 0, 0));
+                return trans.local_to_world(vec3(side_length.x * 0.5, side_length.y * u, side_length.z * v));
+            }
+
+            weight += area_x;
+            if (r < weight)
+            {
+                normal = trans.local_to_world_dir(vec3(-1, 0, 0));
+                return trans.local_to_world(vec3(-side_length.x * 0.5, side_length.y * u, side_length.z * v));
+            }
+
+            weight += area_y;
+            if (r < weight)
+            {
+                normal = trans.local_to_world_dir(vec3(0, 1, 0));
+                return trans.local_to_world(vec3(side_length.x * u, side_length.y * 0.5, side_length.z * v));
+            }
+
+            weight += area_y;
+            if (r < weight)
+            {
+                normal = trans.local_to_world_dir(vec3(0, -1, 0));
+
+                return trans.local_to_world(vec3(side_length.x * u, -side_length.y * 0.5, side_length.z * v));
+            }
+
+            weight += area_z;
+            if (r < weight)
+            {
+                normal = trans.local_to_world_dir(vec3(0, 0, 1));
+                return trans.local_to_world(vec3(side_length.x * u, side_length.y * v, side_length.z * 0.5));
+            }
+
+            normal = trans.local_to_world_dir(vec3(0, 0, -1));
+            return trans.local_to_world(vec3(side_length.x * u, side_length.y * v, -side_length.z * 0.5));
+        };
     };
 }

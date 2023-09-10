@@ -21,16 +21,6 @@ const double SCATTERING = 0.15;
 const double ABSORPTION = 0.0;
 const double EXTINCTION = SCATTERING + ABSORPTION;
 const double HG_G = 0.5;
-const double NEE_RATIO = 0.5;
-
-template <class T>
-void log(T text)
-{
-    if (omp_get_thread_num() == 0)
-    {
-        std::cout << text << std::endl;
-    }
-};
 
 double sample_distance()
 {
@@ -44,7 +34,7 @@ double transmittance(double distance)
     return std::exp(-EXTINCTION * distance);
 }
 
-vec3 sample_henyey_greenstein(vec3 wi, double g)
+vec3 sample_henyey_greenstein(vec3 wi, double g, double &pdf)
 {
     double phi = 2.0 * M_PI * rnd();
     double sqrTerm = (1.0 - g * g) / (1.0 + g - 2.0 * g * rnd());
@@ -60,7 +50,7 @@ vec3 sample_henyey_greenstein(vec3 wi, double g)
     vec3 s, t;
     orthonormal_basis(wi, s, t);
 
-    // pdf = (1.0 - g * g) / (4.0 * M_PI * std::pow(1.0 + g * g + 2 * g * cos_theta, 1.5));
+    pdf = (1.0 - g * g) / (4.0 * M_PI * std::pow(1.0 + g * g + 2 * g * cos_theta, 1.5));
     return local_to_world(local, s, wi, t);
 }
 
@@ -86,6 +76,10 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
     vec3 col;
     vec3 throughput(1);
     ray ra = init_ray;
+    double nee_ratio = 0.0;
+    bool from_scattering;
+    double latest_phase;
+    double latest_brdf_pdf;
 
     for (int depth = 0; depth < MAX_DEPTH; depth++)
     {
@@ -105,25 +99,30 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
                 vec3 position = ra(s);
                 double light_pdf;
                 vec3 light_le;
-                vec3 light_pos = aggregate.sample_light(light_pdf, light_le);
+                vec3 light_normal;
+                vec3 light_pos = aggregate.sample_light(light_pdf, light_normal, light_le);
 
                 vec3 diff = light_pos - position;
                 double light_distance = diff.length();
                 vec3 light_ray_dir = diff / light_distance;
                 ray light_ray(position, light_ray_dir);
+                double G_over_cos_theta = std::abs(dot(-light_ray_dir, light_normal)) / (light_distance * light_distance);
+
+                double phase = eval_henyey_greenstein(dot(-ra.direction, light_ray_dir), HG_G);
+                nee_ratio = light_pdf / (light_pdf + phase * G_over_cos_theta);
+
                 hit light_hit;
                 if (aggregate.intersect(light_ray, light_hit))
                 {
                     // visible
                     if (light_hit.t >= light_distance - 0.001)
                     {
-                        double G = std::abs(dot(-light_ray_dir, light_hit.normal)) / (light_distance * light_distance);
-                        double phase = eval_henyey_greenstein(dot(-ra.direction, light_ray_dir), HG_G);
-                        col += NEE_RATIO * transmittance(light_distance) * throughput * phase * G * light_le / light_pdf;
+                        col += nee_ratio * transmittance(light_distance) * throughput * phase * G_over_cos_theta * light_le / light_pdf;
                     }
                 }
 #endif
-                ra = ray(ra(s), sample_henyey_greenstein(-ra.direction, HG_G));
+                ra = ray(ra(s), sample_henyey_greenstein(-ra.direction, HG_G, latest_phase));
+                from_scattering = true;
             }
             else
             {
@@ -139,9 +138,15 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
                 if (light->enable)
                 {
 #if NEE
-                    // if (depth == 0)
+                    if (depth == 0)
                     {
-                        col += throughput * light->Le() * (1.0 - NEE_RATIO);
+                        col += throughput * light->Le();
+                    }
+                    else
+                    {
+                        double latest = from_scattering ? latest_phase : latest_brdf_pdf;
+                        double cos_theta_over_G = ray_hit.t * ray_hit.t / std::abs(dot(ra.direction, normal));
+                        col += throughput * light->Le() * latest / (latest + (1.0 / aggregate.light_area) * cos_theta_over_G);
                     }
 #else
                     col += throughput * light->Le();
@@ -152,23 +157,27 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
 #if NEE
                 double light_pdf;
                 vec3 light_le;
-                vec3 light_pos = aggregate.sample_light(light_pdf, light_le);
+                vec3 light_normal;
+                vec3 light_pos = aggregate.sample_light(light_pdf, light_normal, light_le);
 
                 vec3 diff = light_pos - position;
                 double light_distance = diff.length();
                 vec3 light_ray_dir = diff / light_distance;
                 ray light_ray(position + 0.0001 * normal, light_ray_dir);
+
+                vec3 light_ray_dir_local = world_to_local(light_ray_dir, s, normal, t);
+                double light_brdf_pdf;
+                double G_over_cos_theta = std::abs(dot(-light_ray_dir, light_normal)) / (light_distance * light_distance);
+                double G = std::abs(dot(light_ray_dir, normal)) * G_over_cos_theta;
+                vec3 light_brdf = material->eval_brdf(wo_local, light_ray_dir_local, light_brdf_pdf);
+                nee_ratio = light_pdf / (light_pdf + light_brdf_pdf * G_over_cos_theta);
                 hit light_hit;
                 if (aggregate.intersect(light_ray, light_hit))
                 {
                     // visible
                     if (light_hit.t >= light_distance - 0.01)
                     {
-                        double G = std::abs(dot(light_ray_dir, normal)) *
-                                   std::abs(dot(-light_ray_dir, light_hit.normal)) / (light_distance * light_distance);
-                        vec3 light_ray_dir_local = world_to_local(light_ray_dir, s, normal, t);
-                        vec3 light_brdf = material->eval_brdf(wo_local, light_ray_dir_local);
-                        col += NEE_RATIO * transmittance(light_distance) * throughput * light_brdf * G * light_le / light_pdf;
+                        col += nee_ratio * transmittance(light_distance) * throughput * light_brdf * G * light_le / light_pdf;
                     }
                 }
 #endif
@@ -183,6 +192,8 @@ vec3 trace(const ray &init_ray, const aggregate &aggregate)
                 throughput *= brdf * cos / pdf;
 
                 ra = ray(ray_hit.position + 0.001 * normal, wi);
+                latest_brdf_pdf = pdf;
+                from_scattering = false;
             }
         }
         else

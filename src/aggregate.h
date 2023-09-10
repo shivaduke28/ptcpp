@@ -78,10 +78,11 @@ namespace ptcpp
             return vec3(0, 1, 0);
         }
 
-        vec3 sample_light(double &pdf, vec3 &le) const
+        vec3 sample_light(double &pdf, vec3 &normal, vec3 &le) const
         {
             double r = rnd() * light_area;
             int length = light_shapes.size();
+            pdf = 1.0 / light_area;
             for (int i = 0; i < length; ++i)
             {
                 auto shape = light_shapes[i];
@@ -89,8 +90,7 @@ namespace ptcpp
                 if (r < a || i == length - 1)
                 {
                     double shape_pdf;
-                    vec3 pos = (*shape).sample(shape_pdf);
-                    pdf = a / light_area * shape_pdf;
+                    vec3 pos = (*shape).sample(normal, shape_pdf);
                     le = shape->light->Le();
                     return pos;
                 }

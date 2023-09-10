@@ -18,5 +18,6 @@ namespace ptcpp
 
         virtual bool intersect(const ray &ray, hit &res) const = 0;
         virtual vec3 sample(double &pdf) const = 0;
+        virtual vec3 sample(vec3 &normal, double &pdf) const = 0;
     };
 }
