@@ -12,6 +12,8 @@
 #include "random.h"
 #include <float.h>
 
+#define NEE 1
+
 using namespace ptcpp;
 
 const int MAX_DEPTH = 500;
@@ -80,13 +82,18 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate, const scene_light
             auto light = ray_hit.light;
             if (light->enable)
             {
+#if NEE
                 if (depth == 0)
                 {
                     col += throughput * light->Le();
                 }
+#else
+                col += throughput * light->Le();
+#endif
                 break;
             }
 
+#if NEE
             double light_pdf;
             vec3 light_pos = scene_lights.sample(light_pdf);
 
@@ -107,6 +114,7 @@ vec3 radiance(const ray &init_ray, const aggregate &aggregate, const scene_light
                     col += throughput * light_brdf * G * light_hit.light->Le() / light_pdf;
                 }
             }
+#endif
 
             double pdf;
             vec3 wi_local;
@@ -146,23 +154,23 @@ int main()
     aggregate aggregate;
     scene_lights scene_lights;
     // floor
-    aggregate.add(std::make_shared<cube>(vec3(0, -0.5, 0), vec3(5, 1, 5), white, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(5, 1, 5), vec3(0, -0.5, 0), white, light_off));
     // ceil
-    aggregate.add(std::make_shared<cube>(vec3(0, 4.5, 0), vec3(5, 1, 5), white, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(5, 1, 5), vec3(0, 4.5, 0), white, light_off));
     // wall
-    aggregate.add(std::make_shared<cube>(vec3(0, 2, -2.5), vec3(5, 5, 1), white, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(5, 5, 1), vec3(0, 2, -2.5), white, light_off));
     // right green
-    aggregate.add(std::make_shared<cube>(vec3(2.5, 2.5, 0), vec3(1, 5, 5), green, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(1, 5, 5), vec3(2.5, 2.5, 0), green, light_off));
     // left red
-    aggregate.add(std::make_shared<cube>(vec3(-2.5, 2.5, 0), vec3(1, 5, 5), red, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(1, 5, 5), vec3(-2.5, 2.5, 0), red, light_off));
     // light
-    auto cube_light = std::make_shared<cube>(vec3(0, 4, 0), vec3(1, 0.2, 1), white, light);
+    auto cube_light = std::make_shared<cube>(vec3(1, 0.2, 1), vec3(0, 4, 0), white, light);
     aggregate.add(cube_light);
     scene_lights.add(cube_light);
 
-    aggregate.add(std::make_shared<cube>(vec3(0.5, 1, -1), vec3(0.8, 2, 0.8), quaternion::axis_y(M_PI / 4.0), white, light_off));
-    aggregate.add(std::make_shared<cube>(vec3(-0.5, 2.5, 0.2), vec3(1.5, 0.5, 0.5), quaternion::axis_x(M_PI / 4.0), white, light_off));
-    aggregate.add(std::make_shared<sphere>(vec3(-0.5, 0.5, 0), 0.5, white, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(0.8, 2, 0.8), vec3(0.5, 1, -1), quaternion::axis_y(M_PI / 4.0), white, light_off));
+    aggregate.add(std::make_shared<cube>(vec3(1.5, 0.5, 0.5), vec3(-0.5, 2.5, 0.2), quaternion::axis_x(M_PI / 4.0), white, light_off));
+    aggregate.add(std::make_shared<sphere>(0.5, vec3(-0.5, 0.5, 0), white, light_off));
 
 #pragma omp parallel for schedule(dynamic, 1)
     for (int i = 0; i < img.width; i++)

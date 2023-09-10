@@ -6,62 +6,37 @@
 #include "ray.h"
 #include "hit.h"
 #include "random.h"
+#include "transform.h"
 
 namespace ptcpp
 {
     class cube : public shape
     {
-        vec3 center;
         vec3 side_length;
-        quaternion rotation;
-        quaternion rotation_inv;
-
-        vec3 world_to_local(const vec3 &p) const
-        {
-            return rotation_inv * (p - center);
-        };
-
-        ray world_to_local(const ray &r) const
-        {
-            return ray(world_to_local(r.origin), rotation_inv * r.direction);
-        };
-
-        vec3 local_to_world(const vec3 &p) const
-        {
-            return (rotation * p) + center;
-        };
-
-        ray local_to_world(const ray &r) const
-        {
-            return ray(local_to_world(r.origin), rotation * r.direction);
-        };
+        transform trans;
 
     public:
-        cube(const vec3 &_center, vec3 _side_length,
+        cube(vec3 _side_length, const vec3 &_center,
              const std::shared_ptr<ptcpp::material> &_material,
              const std::shared_ptr<ptcpp::light> &_light)
-            : center(_center), side_length(_side_length),
+            : trans(_center), side_length(_side_length),
               shape(_material, _light)
         {
-            rotation = quaternion::unit();
-            rotation_inv = rotation.inverse();
             area = (side_length.x * side_length.y + side_length.y * side_length.z + side_length.z * side_length.x) * 2.0;
         };
 
-        cube(const vec3 &_center, vec3 _side_length, quaternion _rotation,
+        cube(vec3 _side_length, const vec3 &_center, quaternion _rotation,
              const std::shared_ptr<ptcpp::material> &_material,
              const std::shared_ptr<ptcpp::light> &_light)
-            : center(_center), side_length(_side_length),
-              rotation(_rotation),
+            : trans(_center, _rotation), side_length(_side_length),
               shape(_material, _light)
         {
-            rotation_inv = rotation.inverse();
             area = (side_length.x * side_length.y + side_length.y * side_length.z + side_length.z * side_length.x) * 2.0;
         };
 
         bool intersect(const ray &ray, hit &hit) const
         {
-            ptcpp::ray ray_local = world_to_local(ray);
+            ptcpp::ray ray_local = trans.world_to_local(ray);
             float tmin = 0.0, tmax = INFINITY;
             vec3 min = -side_length * 0.5;
             vec3 max = side_length * 0.5;
@@ -100,7 +75,7 @@ namespace ptcpp
             {
                 normal_local = position_local.z >= 0 ? vec3(0, 0, 1) : vec3(0, 0, -1);
             }
-            hit.normal = rotation * normal_local;
+            hit.normal = trans.local_to_world_dir(normal_local);
             return true;
         };
 
@@ -122,34 +97,34 @@ namespace ptcpp
 
             if (r < weight)
             {
-                return local_to_world(vec3(side_length.x * 0.5, side_length.y * u, side_length.z * v));
+                return trans.local_to_world(vec3(side_length.x * 0.5, side_length.y * u, side_length.z * v));
             }
 
             weight += area_x;
             if (r < weight)
             {
-                return local_to_world(vec3(-side_length.x * 0.5, side_length.y * u, side_length.z * v));
+                return trans.local_to_world(vec3(-side_length.x * 0.5, side_length.y * u, side_length.z * v));
             }
 
             weight += area_y;
             if (r < weight)
             {
-                return local_to_world(vec3(side_length.x * u, side_length.y * 0.5, side_length.z * v));
+                return trans.local_to_world(vec3(side_length.x * u, side_length.y * 0.5, side_length.z * v));
             }
 
             weight += area_y;
             if (r < weight)
             {
-                return local_to_world(vec3(side_length.x * u, -side_length.y * 0.5, side_length.z * v));
+                return trans.local_to_world(vec3(side_length.x * u, -side_length.y * 0.5, side_length.z * v));
             }
 
             weight += area_z;
             if (r < weight)
             {
-                return local_to_world(vec3(side_length.x * u, side_length.y * v, side_length.z * 0.5));
+                return trans.local_to_world(vec3(side_length.x * u, side_length.y * v, side_length.z * 0.5));
             }
 
-            return local_to_world(vec3(side_length.x * u, side_length.y * v, -side_length.z * 0.5));
+            return trans.local_to_world(vec3(side_length.x * u, side_length.y * v, -side_length.z * 0.5));
         };
     };
 }

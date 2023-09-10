@@ -21,8 +21,8 @@ namespace ptcpp
         vec3 center;
         double radius;
 
-        sphere(const vec3 &_center,
-               double _radius,
+        sphere(double _radius,
+               const vec3 &_center,
                const std::shared_ptr<ptcpp::material> &_material,
                const std::shared_ptr<ptcpp::light> &_light)
             : center(_center), radius(_radius), shape(_material, _light)
